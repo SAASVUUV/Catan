@@ -1,0 +1,1 @@
+#para conseguir fazer importações relativas entre cenas, precisamos colocar um __init__.py vazio na pasta scenes

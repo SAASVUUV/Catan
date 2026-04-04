@@ -6,6 +6,7 @@ from components.button import Button
 import settings
 from constants import colors as C
 from components.selection_icons import PlayerSlot
+import scenes.configurations as configurations
   
 class MainMenu(BaseScene):
     def __init__(self, manager=None):
@@ -71,7 +72,7 @@ class MainMenu(BaseScene):
         if self.btn_start.handle_event(event):
             print("Iniciando Jogo...")
         if self.btn_config.handle_event(event):
-            print("Abrindo Configurações...")
+            self.manager.replace(configurations.Configurations(self.manager))
         if self.btn_quit.handle_event(event):
             pygame.event.post(pygame.event.Event(pygame.QUIT))
  
