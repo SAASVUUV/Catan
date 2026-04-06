@@ -32,10 +32,19 @@ class PlayerSlot:
         self.is_bot = (index == 3)
         self.font = pygame.font.SysFont("Arial", 11)
         self.hovered = False
+        self.mouse_in = False
 
     def handle_event(self, event):
+        if event.type == pygame.MOUSEMOTION:
+            self.mouse_in = True if self.hovered else False
+            self.hovered = self.rect.collidepoint(event.pos)
+            if(self.hovered and self.mouse_in): self.cursor_hover()
+            elif(not self.hovered and self.mouse_in): self.cursor_default()
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.rect.collidepoint(event.pos):
             self.is_bot = not self.is_bot
+
+    def cursor_hover(self): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+    def cursor_default(self): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
     def update(self):
         self.hovered = self.rect.collidepoint(pygame.mouse.get_pos())

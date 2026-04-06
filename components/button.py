@@ -7,16 +7,23 @@ class Button:
         caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
         self.font = pygame.font.Font(caminho_fonte, font_size)
         self.hovered = False
-        
+        self.mouse_in = False
+
         self.bg_image = pygame.transform.smoothscale(bg_image, (width, height)) if bg_image else None
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEMOTION:
+            self.mouse_in = True if self.hovered else False
             self.hovered = self.rect.collidepoint(event.pos)
+            if(self.hovered and self.mouse_in): self.cursor_hover()
+            elif(not self.hovered and self.mouse_in): self.cursor_default()
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(event.pos):
                 return True
         return False
+
+    def cursor_hover(self): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+    def cursor_default(self): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
     def update(self):
         self.hovered = self.rect.collidepoint(pygame.mouse.get_pos())

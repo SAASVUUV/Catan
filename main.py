@@ -23,7 +23,7 @@ def run():
                 running = False
             else:
                 manager.current.handle_event(event)
- 
+    
         manager.current.update(dt)
         manager.current.render(screen)
         pygame.display.flip()
