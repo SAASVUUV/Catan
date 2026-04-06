@@ -1,15 +1,28 @@
 import pygame
+from constants import *
 
 class Button:
     def __init__(self, x, y, width, height, text, font_size=20, bg_image=None):
         self.rect = pygame.Rect(x, y, width, height)
+        self.x_offset_shadow = -3
+        self.y_offset_shadow = -5
+        self.shadow_rect = pygame.Rect(
+            x-self.x_offset_shadow, 
+            y-self.y_offset_shadow,
+            width, 
+            height
+        )
         self.text = text
         caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
         self.font = pygame.font.Font(caminho_fonte, font_size)
         self.hovered = False
         self.mouse_in = False
-
+        self.bg_color = BLUE_MEDIUM
+        self.bg_hover_color = BLUE_BRIGHT
+        self.box_shadow_color = BLACK
         self.bg_image = pygame.transform.smoothscale(bg_image, (width, height)) if bg_image else None
+        self.text_color = BEIGE_LIGHT 
+        self.text_hover_color = BEIGE_MEDIUM
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEMOTION:
@@ -32,9 +45,10 @@ class Button:
         if self.bg_image:
             surface.blit(self.bg_image, self.rect.topleft)
         else:
-            color = (100, 100, 100) if self.hovered else (70, 70, 70)
+            color = self.bg_color if self.hovered else self.bg_hover_color
+            pygame.draw.rect(surface, self.box_shadow_color, self.shadow_rect)
             pygame.draw.rect(surface, color, self.rect, border_radius=6)
 
-        text_color = (218, 165, 32) if self.hovered else (255, 255, 255)
-        label = self.font.render(self.text, True, text_color)
+
+        label = self.font.render(self.text, True, self.text_hover_color if self.hovered else self.text_color)
         surface.blit(label, label.get_rect(center=self.rect.center))
