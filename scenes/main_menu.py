@@ -38,9 +38,9 @@ class MainMenu(BaseScene):
 
         bx = centro_alinhamento_x - (bw // 2)
 
-        self.btn_start   = Button(bx, btn_y_start,                  bw, bh, "Iniciar Jogo",  28)
-        self.btn_config  = Button(bx, btn_y_start + bh + gap,       bw, bh, "Configurações", 28)
-        self.btn_quit    = Button(bx, btn_y_start + (bh + gap) * 2, bw, bh, "Sair do Jogo",  28)
+        self.btn_start   = Button(bx, btn_y_start,                  bw, bh, "Iniciar Jogo",  28, shadow=True)
+        self.btn_config  = Button(bx, btn_y_start + bh + gap,       bw, bh, "Configurações", 28, shadow=True)
+        self.btn_quit    = Button(bx, btn_y_start + (bh + gap) * 2, bw, bh, "Sair do Jogo",  28, shadow=True)
 
     def _init_board_image(self):
         board_size = 300

@@ -3,10 +3,10 @@ import os
 import math
 import pygame
 from .base_scene import BaseScene
-from components.button import Button
 import settings
 from constants import colors as C
 from components.selection_icons import PlayerSlot
+from components import Slider, Label, Checkbox
 
 class Configurations(BaseScene):
     def __init__(self, manager=None):
@@ -14,42 +14,54 @@ class Configurations(BaseScene):
         self.screen_width = settings.SCREEN_WIDTH
         self.screen_height = settings.SCREEN_HEIGHT
 
-        self._load_fonts()
-        self._init_buttons()
+        self._init()
 
-    def _load_fonts(self):
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
-        try:
-            self.title_font = pygame.font.Font(caminho_fonte, 120)
-            self.label_font = pygame.font.Font(caminho_fonte, 20)
-        except FileNotFoundError:
-            print("Fonte não encontrada! Usando fallback.")
-            self.title_font = pygame.font.SysFont("serif", 100, bold=True)
-            self.label_font = pygame.font.SysFont("serif", 20)
+    def _init(self):
+        W = self.screen_width
+        H = self.screen_height
+        w0 = W * 0.1
+        w1 = W * 0.5
+        h0 = H * 0.1
+        bar_w = W*0.4
+        bar_h = 8
+        gap_h = 60
+        font_size = 40
 
-    def _init_buttons(self):
+        self.slider_master_sound_label = Label("Volume Master", w0, h0-bar_h*2, font_size)
+        self.slider_master_sound = Slider(w1, h0, bar_w, bar_h)
 
-        W = self.screen_width 
-        centro_alinhamento_x = W // 3.5
+        self.slider_music_sound_label = Label("Volume Música", w0, h0-bar_h*2 + gap_h, font_size)
+        self.slider_music_sound = Slider(w1, h0 + gap_h, bar_w, bar_h)
 
-        bw, bh, gap = 250, 50, 10
-        btn_y_start = 260
+        self.slider_sfx_sound_label = Label("Volume SFX", w0, h0-bar_h*2 + 2*gap_h, font_size)
+        self.slider_sfx_sound = Slider(w1, h0 + 2 * gap_h, bar_w, bar_h)
 
-        bx = centro_alinhamento_x - (bw // 2)
-
-        self.btn_sound_on = Button(bx, btn_y_start,                  bw, bh, "ON",  28)
-        self.btn_sound_off = Button(220, self.screen_height - 120, 150, 50, "OFF", 24)
-
+        self.aracno_label = Label("Modo Aracnofobia", w0, H * 0.9, font_size)
+        self.aracno_button = Checkbox(W * 0.9 - 30, H * 0.9, 30)
  
     def handle_event(self, event):
-        pass
+        self.slider_master_sound.handle_event(event)
+        self.slider_music_sound.handle_event(event)
+        self.slider_sfx_sound.handle_event(event)
+        self.aracno_button.handle_event(event)
  
     def update(self, dt):
-        self.btn_sound_on.update()
-        self.btn_sound_off.update()
+        self.slider_master_sound.update()
+        self.slider_music_sound.update()
+        self.slider_sfx_sound.update()
+        self.aracno_button.update()
  
     def render(self, surface):
-        self.btn_sound_on.render(surface)
-        self.btn_sound_off.render(surface)
-
         surface.fill(C.BACKGROUND)
+
+        self.slider_master_sound_label.render(surface)
+        self.slider_master_sound.render(surface)
+
+        self.slider_music_sound_label.render(surface)
+        self.slider_music_sound.render(surface)
+
+        self.slider_sfx_sound_label.render(surface)
+        self.slider_sfx_sound.render(surface)
+
+        self.aracno_label.render(surface)
+        self.aracno_button.render(surface)
