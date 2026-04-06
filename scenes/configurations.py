@@ -7,6 +7,7 @@ import settings
 from constants import colors as C
 from components.selection_icons import PlayerSlot
 from components import Slider, Label, Checkbox
+from components.back_button import BackButton
 
 class Configurations(BaseScene):
     def __init__(self, manager=None):
@@ -38,19 +39,25 @@ class Configurations(BaseScene):
 
         self.aracno_label = Label("Modo Aracnofobia", w0, H * 0.9, font_size)
         self.aracno_button = Checkbox(W * 0.9 - 30, H * 0.9, 30)
+
+        self.btn_back = BackButton(20, 20)
  
     def handle_event(self, event):
         self.slider_master_sound.handle_event(event)
         self.slider_music_sound.handle_event(event)
         self.slider_sfx_sound.handle_event(event)
         self.aracno_button.handle_event(event)
+        if self.btn_back.handle_event(event):
+            from scenes.main_menu import MainMenu
+            self.manager.replace(MainMenu(self.manager))
  
     def update(self, dt):
         self.slider_master_sound.update()
         self.slider_music_sound.update()
         self.slider_sfx_sound.update()
         self.aracno_button.update()
- 
+        self.btn_back.update()
+
     def render(self, surface):
         surface.fill(C.BACKGROUND)
 
@@ -65,3 +72,4 @@ class Configurations(BaseScene):
 
         self.aracno_label.render(surface)
         self.aracno_button.render(surface)
+        self.btn_back.render(surface)
