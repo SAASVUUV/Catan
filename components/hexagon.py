@@ -19,12 +19,24 @@ class Hexagon:
             add_y = y + radius * math.sin(angle)
             self.points.append((add_x, add_y))
         
-        self.top_middle = self.points[0]
-        self.top_left = self.points[1]
-        self.bottom_left = self.points[2]
-        self.bottom_middle = self.points[3]
-        self.bottom_right = self.points[4]
-        self.top_right = self.points[5]
+        self.create_vertices()
+        self.create_edges()
+    
+    def create_vertices(self):
+        self.vertex_top = self.points[0]
+        self.vertex_bottom = self.points[3]
+        self.vertex_top_left = self.points[1]
+        self.vertex_top_right = self.points[5]
+        self.vertex_bottom_left = self.points[2]
+        self.vertex_bottom_right = self.points[4]
+
+    def create_edges(self):
+        self.edge_left = (self.vertex_bottom_left, self.vertex_top_left)
+        self.edge_right = (self.vertex_top_right, self.vertex_bottom_right)
+        self.edge_top_left = (self.vertex_top_left, self.vertex_top)
+        self.edge_top_right = (self.vertex_top, self.self.vertex_top_right)
+        self.edge_bottom_left = (self.vertex_bottom, self.vertex_bottom_left)
+        self.edge_bottom_right = (self.vertex_bottom_right, self.vertex_bottom)
 
     def update(self):
         pass
@@ -43,23 +55,3 @@ class Hexagon:
             self.points, 
             0
         )
-    
-
-
-
-
-    
-
-
-# Loop principal
-rodando = True
-while rodando:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            rodando = False
-    
-    tela.fill((255, 255, 255))
-    desenhar_hexagono(tela, AZUL, (200, 200), 50)
-    pygame.display.flip()
-
-pygame.quit()
