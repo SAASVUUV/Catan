@@ -65,9 +65,9 @@ class HexagonTile:
     def extract_houses(self): return [self.house_bottom, self.house_bottom_left, self.house_bottom_right, self.house_top, self.house_top_left, self.house_top_right]
     def extract_roads(self): return [self.road_bottom_left, self.road_bottom_right, self.road_left, self.road_right,self.road_top_left, self.road_top_right]
 
-    def update(self):
+    def update(self, dt):
         pass
-    def handle_event(self):
+    def handle_event(self, event):
         pass
 
     def collidepoint(self, point):

@@ -9,10 +9,10 @@ class Game(BaseScene):
         self.tabletop = Tabletop(100, 100, 50)
 
     def handle_event(self, event: pygame.event.Event):
-        pass
+        self.tabletop.handle_event(event)
 
     def update(self, dt: float):
-        pass
+        self.tabletop.update(dt)
 
     def render(self, surface: pygame.Surface):
         surface.fill(BLACK)

@@ -1,6 +1,6 @@
 import pygame
 from constants import colors as C
-
+from .hover import Hover
 
 def draw_person_icon(surface, cx, cy, size, color):
     r = size // 5
@@ -31,26 +31,21 @@ class PlayerSlot:
         self.index = index
         self.is_bot = (index == 3)
         self.font = pygame.font.SysFont("Arial", 11)
+        self.hover = Hover(self.rect.collidepoint, on_mouse_click=self.on_mouse_click)
         self.hovered = False
         self.mouse_in = False
+    
+    def on_mouse_click(self):
+        self.is_bot = not self.is_bot
 
     def handle_event(self, event):
-        if event.type == pygame.MOUSEMOTION:
-            self.mouse_in = True if self.hovered else False
-            self.hovered = self.rect.collidepoint(event.pos)
-            if(self.hovered and self.mouse_in): self.cursor_hover()
-            elif(not self.hovered and self.mouse_in): self.cursor_default()
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.rect.collidepoint(event.pos):
-            self.is_bot = not self.is_bot
-
-    def cursor_hover(self): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-    def cursor_default(self): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        return self.hover.handle_event(event)
 
     def update(self):
-        self.hovered = self.rect.collidepoint(pygame.mouse.get_pos())
+        self.hover.update()
 
     def _background_color(self):
-        return C.SLOT_BG_HOVER if self.hovered else C.SLOT_BG
+        return C.SLOT_BG_HOVER if self.hover.hovered else C.SLOT_BG
 
     def _border_color(self):
         return C.SLOT_BORDER_BOT if self.is_bot else C.SLOT_BORDER_PLAYER

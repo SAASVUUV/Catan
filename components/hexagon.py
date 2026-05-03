@@ -38,10 +38,10 @@ class Hexagon:
         self.edge_bottom_left = (self.vertex_bottom, self.vertex_bottom_left)
         self.edge_bottom_right = (self.vertex_bottom_right, self.vertex_bottom)
 
-    def update(self):
+    def update(self, dt):
         pass
 
-    def handle_event(self):
+    def handle_event(self, event):
         pass
 
     def collidepoint(self, point):

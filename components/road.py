@@ -8,5 +8,7 @@ class Road:
     
     def render(self, window):
         pass
-    def update(self):
+    def handle_event(self, event):
+        pass
+    def update(self, dt):
         pass

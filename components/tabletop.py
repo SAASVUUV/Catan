@@ -45,10 +45,16 @@ class Tabletop:
                 else: self.tiles_matrix[i][j] = None
 
     def handle_event(self, event):
-        pass
+        for tile in self.tiles: tile.handle_event(event)
+        for road in self.roads: road.handle_event(event)
+        for house in self.houses: 
+            if house: house.handle_event(event)
 
     def update(self, dt):
-        pass
+        for tile in self.tiles: tile.update(dt)
+        for road in self.roads: road.update(dt)
+        for house in self.houses: 
+            if house: house.update(dt)
 
     def render(self, surface):
         for tile in self.tiles: tile.render(surface)
