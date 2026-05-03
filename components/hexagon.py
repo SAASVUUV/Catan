@@ -13,8 +13,8 @@ class Hexagon:
         self.circle = Circle(x, y, radius, color)
 
         self.points = []
-        for i in range(3, 10): # Começa com 90º
-            angle = i * (math.pi / 3) 
+        for i in range(6):
+            angle = -math.pi / 2 + i * (math.pi / 3)
             add_x = x + radius * math.cos(angle)
             add_y = y + radius * math.sin(angle)
             self.points.append((add_x, add_y))
@@ -34,7 +34,7 @@ class Hexagon:
         self.edge_left = (self.vertex_bottom_left, self.vertex_top_left)
         self.edge_right = (self.vertex_top_right, self.vertex_bottom_right)
         self.edge_top_left = (self.vertex_top_left, self.vertex_top)
-        self.edge_top_right = (self.vertex_top, self.self.vertex_top_right)
+        self.edge_top_right = (self.vertex_top, self.vertex_top_right)
         self.edge_bottom_left = (self.vertex_bottom, self.vertex_bottom_left)
         self.edge_bottom_right = (self.vertex_bottom_right, self.vertex_bottom)
 
