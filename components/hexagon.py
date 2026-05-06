@@ -10,7 +10,8 @@ class Hexagon:
         self.y = y
         self.color = color
 
-        self.circle = Circle(x, y, radius, color)
+        dr = 10
+        self.circle = Circle(x, y, radius-dr, color)
 
         self.points = []
         for i in range(6):
@@ -45,8 +46,7 @@ class Hexagon:
         pass
 
     def collidepoint(self, point):
-        px, py = point
-        return self.circle.collidepoint(px, py)
+        return self.circle.collidepoint(point)
 
     def render(self, surface):
         pygame.draw.polygon(

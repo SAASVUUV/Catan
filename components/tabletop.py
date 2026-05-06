@@ -39,10 +39,15 @@ class Tabletop:
                         i,
                         self.tiles_matrix
                     )
-                    self.houses = self.houses | set(self.tiles_matrix[i][j].extract_houses())
-                    self.roads = self.roads | set(self.tiles_matrix[i][j].extract_roads())
                     self.tiles.add(self.tiles_matrix[i][j])
                 else: self.tiles_matrix[i][j] = None
+        for tile in self.tiles: 
+            tile.link()
+            tile.create_houses()
+            tile.create_roads()
+            self.houses |= set(tile.extract_houses())
+            self.roads |= set(tile.extract_roads())
+
 
     def handle_event(self, event):
         for tile in self.tiles: tile.handle_event(event)

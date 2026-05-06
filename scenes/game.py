@@ -7,6 +7,7 @@ class Game(BaseScene):
     def __init__(self, manager=None):
         self.manager = manager
         self.tabletop = Tabletop(100, 100, 50)
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
     def handle_event(self, event: pygame.event.Event):
         self.tabletop.handle_event(event)
