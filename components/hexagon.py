@@ -26,10 +26,10 @@ class Hexagon:
     def create_vertices(self):
         self.vertex_top = self.points[0]
         self.vertex_bottom = self.points[3]
-        self.vertex_top_left = self.points[1]
-        self.vertex_top_right = self.points[5]
-        self.vertex_bottom_left = self.points[2]
-        self.vertex_bottom_right = self.points[4]
+        self.vertex_top_left = self.points[5]
+        self.vertex_top_right = self.points[1]
+        self.vertex_bottom_left = self.points[4]
+        self.vertex_bottom_right = self.points[2]
 
     def create_edges(self):
         self.edge_left = (self.vertex_bottom_left, self.vertex_top_left)
