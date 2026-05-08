@@ -6,6 +6,7 @@ class House:
         self.x = pos[0]
         self.y = pos[1]
         self.circle = Circle(pos[0], pos[1], radius, (255,0,0)) 
+        self.owner = None
 
     def render(self, window):
         self.circle.render(window)

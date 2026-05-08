@@ -27,11 +27,18 @@ class Tabletop:
             for j in range(len(self.tiles_matrix[i])):
                 if(self.tiles_matrix[i][j]): 
                     x = x0+j*dx
-                    number = numbers.pop(randrange(len(numbers)))
-                    type = types.pop(randrange(len(types)))
+                    
+                    # 1. Sorteia o tipo primeiro
+                    tile_type = types.pop(randrange(len(types)))
+                    
+                    # 2. Só sorteia o número se NÃO for deserto
+                    tile_number = None
+                    if tile_type != DESERT:
+                        tile_number = numbers.pop(randrange(len(numbers)))
+                    
                     self.tiles_matrix[i][j] = HexagonTile(
-                        number,
-                        type,
+                        tile_number, # Passa None se for deserto
+                        tile_type,
                         x, 
                         y,
                         hex_radius,
@@ -69,3 +76,20 @@ class Tabletop:
         for road in self.roads: road.render(surface)
         for house in self.houses: 
             if house: house.render(surface)
+
+    def distribute_initial_resources(self, player, house_instance):
+        print(f"--- Debug: Distribuindo para {player.name} ---")
+        found_at_least_one = False
+        
+        for tile in self.tiles:
+            if house_instance in tile.extract_houses():
+                found_at_least_one = True
+                print(f"Casa encosta no Tile: Tipo={tile.terrain_type}, Numero={tile.number}")
+                
+                if tile.terrain_type != DESERT and tile.number is not None:
+                    player.resources[tile.terrain_type] += 1
+        
+        if not found_at_least_one:
+            print("AVISO: Esta instância de casa não foi encontrada em nenhum tile!")
+            
+        print(f"Recursos finais: {player.resources}")
