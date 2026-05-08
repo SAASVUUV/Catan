@@ -3,6 +3,9 @@ from constants.types_colors import types_colors
 from .road import Road
 from .house import House
 from .hover import Hover
+from .text import Text
+from constants.colors import BLACK
+import pygame
 
 class HexagonTile:
 
@@ -10,6 +13,7 @@ class HexagonTile:
         self.hexagon = Hexagon(radius,x,y, types_colors[type])
         self.terrain_type = type
         self.number = number
+        self.text_number = Text(str(number), 30, BLACK, (x,y))
         self.vertices = []
         self.roads = []
         self.x_tabletop = x_tabletop
@@ -79,3 +83,4 @@ class HexagonTile:
 
     def render(self, surface):
         self.hexagon.render(surface)
+        self.text_number.render_center(surface)
