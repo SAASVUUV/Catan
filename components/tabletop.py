@@ -1,7 +1,8 @@
 from .hexagon_tile import HexagonTile
+from .port import Port
 from constants.types import *
 from math import cos, pi, sqrt
-from random import randrange
+from utils.myrandom import takesome
 
 class Tabletop:
 
@@ -27,8 +28,8 @@ class Tabletop:
             for j in range(len(self.tiles_matrix[i])):
                 if(self.tiles_matrix[i][j]): 
                     x = x0+j*dx
-                    number = numbers.pop(randrange(len(numbers)))
-                    type = types.pop(randrange(len(types)))
+                    number = takesome(numbers)
+                    type = takesome(types)
                     self.tiles_matrix[i][j] = HexagonTile(
                         number,
                         type,
@@ -41,12 +42,57 @@ class Tabletop:
                     )
                     self.tiles.add(self.tiles_matrix[i][j])
                 else: self.tiles_matrix[i][j] = None
-        for tile in self.tiles: 
-            tile.link()
-            tile.create_houses()
-            tile.create_roads()
-            self.houses |= set(tile.extract_houses())
-            self.roads |= set(tile.extract_roads())
+        for row in self.tiles_matrix:
+            for tile in row:
+                if not tile:
+                    continue
+                tile.link()
+                tile.create_houses()
+                tile.create_roads()
+                self.houses |= set(tile.extract_houses())
+                self.roads |= set(tile.extract_roads())
+
+
+        self.port_hexagons = [
+            self.tiles_matrix[0][2],
+            self.tiles_matrix[0][4],
+            self.tiles_matrix[1][1],
+            self.tiles_matrix[1][7],
+            self.tiles_matrix[2][8],
+            self.tiles_matrix[3][1],
+            self.tiles_matrix[3][7],
+            self.tiles_matrix[4][2],
+            self.tiles_matrix[4][4],
+        ]
+
+        self.port_positions = [
+            'tl', 'tr', 'l', 'tr', 'r', 'l', 'br', 'bl', 'br'
+        ]
+
+        port_type = [BRICK, ROCK, TREE, LAMB, WHEAT] + [GENERIC] * 4
+
+        self.ports = []
+        for i, (port, pos) in enumerate(zip(self.port_hexagons,self.port_positions)):
+            if pos == 'l':
+                p1 = port.house_bottom_left
+                p2 = port.house_top_left
+            if pos == 'tr':
+                p1 = port.house_top
+                p2 = port.house_top_right
+            if pos == 'tl':
+                p1 = port.house_top_left
+                p2 = port.house_top
+            if pos == 'r':
+                p1 = port.house_top_right
+                p2 = port.house_bottom_right
+            if pos == 'br':
+                p1 = port.house_bottom_right
+                p2 = port.house_bottom
+            if pos == 'bl':
+                p1 = port.house_bottom
+                p2 = port.house_bottom_left
+
+            self.ports.append(Port(p1, p2, takesome(port_type)))
 
 
     def handle_event(self, event):
@@ -66,3 +112,4 @@ class Tabletop:
         for road in self.roads: road.render(surface)
         for house in self.houses: 
             if house: house.render(surface)
+        for port in self.ports: port.render(surface)
