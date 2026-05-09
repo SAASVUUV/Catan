@@ -1,7 +1,8 @@
 from .hexagon_tile import HexagonTile
+from .port import Port
 from constants.types import *
 from math import cos, pi, sqrt
-from random import randrange
+from utils.myrandom import takesome
 
 class Tabletop:
 
@@ -27,15 +28,8 @@ class Tabletop:
             for j in range(len(self.tiles_matrix[i])):
                 if(self.tiles_matrix[i][j]): 
                     x = x0+j*dx
-                    
-                    # 1. Sorteia o tipo primeiro
-                    tile_type = types.pop(randrange(len(types)))
-                    
-                    # 2. Só sorteia o número se NÃO for deserto
-                    tile_number = None
-                    if tile_type != DESERT:
-                        tile_number = numbers.pop(randrange(len(numbers)))
-                    
+                    number = takesome(numbers)
+                    type = takesome(types)
                     self.tiles_matrix[i][j] = HexagonTile(
                         tile_number, # Passa None se for deserto
                         tile_type,
@@ -59,6 +53,48 @@ class Tabletop:
                 self.roads |= set(tile.extract_roads())
 
 
+        self.port_hexagons = [
+            self.tiles_matrix[0][2],
+            self.tiles_matrix[0][4],
+            self.tiles_matrix[1][1],
+            self.tiles_matrix[1][7],
+            self.tiles_matrix[2][8],
+            self.tiles_matrix[3][1],
+            self.tiles_matrix[3][7],
+            self.tiles_matrix[4][2],
+            self.tiles_matrix[4][4],
+        ]
+
+        self.port_positions = [
+            'tl', 'tr', 'l', 'tr', 'r', 'l', 'br', 'bl', 'br'
+        ]
+
+        port_type = [BRICK, ROCK, TREE, LAMB, WHEAT] + [GENERIC] * 4
+
+        self.ports = []
+        for i, (port, pos) in enumerate(zip(self.port_hexagons,self.port_positions)):
+            if pos == 'l':
+                p1 = port.house_bottom_left
+                p2 = port.house_top_left
+            if pos == 'tr':
+                p1 = port.house_top
+                p2 = port.house_top_right
+            if pos == 'tl':
+                p1 = port.house_top_left
+                p2 = port.house_top
+            if pos == 'r':
+                p1 = port.house_top_right
+                p2 = port.house_bottom_right
+            if pos == 'br':
+                p1 = port.house_bottom_right
+                p2 = port.house_bottom
+            if pos == 'bl':
+                p1 = port.house_bottom
+                p2 = port.house_bottom_left
+
+            self.ports.append(Port(p1, p2, takesome(port_type)))
+
+
     def handle_event(self, event):
         for tile in self.tiles: tile.handle_event(event)
         for road in self.roads: road.handle_event(event)
@@ -76,20 +112,3 @@ class Tabletop:
         for road in self.roads: road.render(surface)
         for house in self.houses: 
             if house: house.render(surface)
-
-    def distribute_initial_resources(self, player, house_instance):
-        print(f"--- Debug: Distribuindo para {player.name} ---")
-        found_at_least_one = False
-        
-        for tile in self.tiles:
-            if house_instance in tile.extract_houses():
-                found_at_least_one = True
-                print(f"Casa encosta no Tile: Tipo={tile.terrain_type}, Numero={tile.number}")
-                
-                if tile.terrain_type != DESERT and tile.number is not None:
-                    player.resources[tile.terrain_type] += 1
-        
-        if not found_at_least_one:
-            print("AVISO: Esta instância de casa não foi encontrada em nenhum tile!")
-            
-        print(f"Recursos finais: {player.resources}")

@@ -1,3 +1,4 @@
+from core.player import Player
 from .base_scene import BaseScene
 from components.tabletop import Tabletop
 import pygame
@@ -6,7 +7,7 @@ from core.player import Player
 
 class Game(BaseScene):
     def __init__(self, manager=None):
-        self.manager = manager
+        super().__init__(manager)        
         self.tabletop = Tabletop(100, 100, 50)
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         self.current_player = Player("Guilherme")
@@ -34,6 +35,9 @@ class Game(BaseScene):
         house.owner = player
         player.houses_count += 1
         
+<<<<<<< Updated upstream
         # Lógica da Tarefa 4: só distribui na segunda construção
+=======
+>>>>>>> Stashed changes
         if player.houses_count == 2:
             self.tabletop.distribute_initial_resources(player, house)
