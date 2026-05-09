@@ -93,13 +93,40 @@ class Tabletop:
                 p2 = port.house_bottom_left
 
             self.ports.append(Port(p1, p2, takesome(port_type)))
+    
+        self._link_entities() 
 
+    def _link_entities(self):
+        houses_list = [h for h in self.houses if h]
+        for h in houses_list:
+            h.adjacent_houses = set()
+
+        for r in self.roads:
+            if not r:
+                continue
+            ha = next((h for h in houses_list if self._close(h.x, h.y, r.x0, r.y0)), None)
+            hb = next((h for h in houses_list if self._close(h.x, h.y, r.x1, r.y1)), None)
+            r.house_a, r.house_b = ha, hb
+            if ha and hb:
+                ha.adjacent_houses.add(hb)
+                hb.adjacent_houses.add(ha)
+    
+    @staticmethod
+    def _close(x1, y1, x2, y2, eps=2.0):
+        return abs(x1 - x2) <= eps and abs(y1 - y2) <= eps
+
+    def get_buildable_at(self, pos):
+        for house in self.houses:
+            if house and house.circle.collidepoint(pos):
+                return house
+        for road in self.roads:
+            if road and road.collidepoint(pos):
+                return road
+        return None
 
     def handle_event(self, event):
-        for tile in self.tiles: tile.handle_event(event)
-        for road in self.roads: road.handle_event(event)
-        for house in self.houses: 
-            if house: house.handle_event(event)
+        for tile in self.tiles:
+            tile.handle_event(event)
 
     def update(self, dt):
         for tile in self.tiles: tile.update(dt)
