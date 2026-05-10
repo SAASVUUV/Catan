@@ -1,6 +1,7 @@
 import pygame
 from .base_scene import BaseScene
 from core.player import Player
+from core.turn_manager import TurnManager
 from components.tabletop import Tabletop
 from constants.colors import RED, BLUE, GREEN, BLACK, YELLOW
 
@@ -13,7 +14,7 @@ class Game(BaseScene):
             Player(3, "Player 3", GREEN),
             Player(4, "Player 4", YELLOW)
         ]
-        self.turn_index = 3
+        self.turn_manager = TurnManager(self.players)        
         self.tabletop = Tabletop(100, 100, 50)
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
@@ -26,8 +27,12 @@ class Game(BaseScene):
     def _handle_click(self, pos):
         target = self.tabletop.get_buildable_at(pos)
         if target:
-            target.try_build(self.players[self.turn_index])
-            return
+            # Tenta construir usando o jogador atual do TurnManager
+            success = target.try_build(self.turn_manager.current_player)
+            
+            # Se a construção foi bem-sucedida, avançamos o turno automaticamente
+            if success:
+                self.turn_manager.next_turn()
 
     def update(self, dt: float):
         self.tabletop.update(dt)
