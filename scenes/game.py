@@ -1,6 +1,6 @@
 import pygame
 from .base_scene import BaseScene
-from core.player import Player
+from models.player import Player
 from components.tabletop import Tabletop
 from constants.colors import RED, BLUE, GREEN, BLACK, YELLOW
 
