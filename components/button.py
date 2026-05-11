@@ -1,5 +1,6 @@
 import pygame
 from constants import *
+from .hover import Hover
 
 class Button:
     def __init__(self, x, y, width, height, text, font_size=20, bg_image=None, shadow=False):
@@ -7,8 +8,7 @@ class Button:
         self.text = text
         caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
         self.font = pygame.font.Font(caminho_fonte, font_size)
-        self.hovered = False
-        self.mouse_in = False
+        self.hover = Hover(self.rect.collidepoint)
         self.bg_color = BLUE_MEDIUM
         self.bg_hover_color = BLUE_BRIGHT
         self.bg_image = pygame.transform.smoothscale(bg_image, (width, height)) if bg_image else None
@@ -27,29 +27,18 @@ class Button:
             self.box_shadow_color = BLACK
 
     def handle_event(self, event):
-        if event.type == pygame.MOUSEMOTION:
-            self.mouse_in = True if self.hovered else False
-            self.hovered = self.rect.collidepoint(event.pos)
-            if(self.hovered and self.mouse_in): self.cursor_hover()
-            elif(not self.hovered and self.mouse_in): self.cursor_default()
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.rect.collidepoint(event.pos):
-                return True
-        return False
-
-    def cursor_hover(self): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-    def cursor_default(self): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        return self.hover.handle_event(event)
 
     def update(self):
-        self.hovered = self.rect.collidepoint(pygame.mouse.get_pos())
+        self.hover.update()
 
     def render(self, surface):
         if self.bg_image:
             surface.blit(self.bg_image, self.rect.topleft)
         else:
             if self.shadow: pygame.draw.rect(surface, self.box_shadow_color, self.shadow_rect, border_radius=6)
-            color = self.bg_color if self.hovered else self.bg_hover_color
+            color = self.bg_color if self.hover.hovered else self.bg_hover_color
             pygame.draw.rect(surface, color, self.rect, border_radius=6)
 
-        label = self.font.render(self.text, True, self.text_hover_color if self.hovered else self.text_color)
+        label = self.font.render(self.text, True, self.text_hover_color if self.hover.hovered else self.text_color)
         surface.blit(label, label.get_rect(center=self.rect.center))

@@ -1,0 +1,7 @@
+ROCK = 0
+TREE = 1
+LAMB = 2
+BRICK = 3
+WHEAT = 5
+DESERT = 6
+GENERIC = 7
