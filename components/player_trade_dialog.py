@@ -3,16 +3,9 @@ from components.modal import Modal
 from components.button import Button
 from core.trade import TradeOffer
 from models.inventory import TRADEABLE_RESOURCES
-from constants.colors import BROWN_DARK, GOLD, GRAY_STONE, GREEN_FOREST, SAND, RED_BRICK
+from constants.colors import BROWN_DARK, GOLD
 from constants.types import ROCK, TREE, LAMB, BRICK, WHEAT
-
-RESOURCE_COLORS = {
-    ROCK: GRAY_STONE,
-    TREE: GREEN_FOREST,
-    LAMB: (240, 240, 240),
-    BRICK: RED_BRICK,
-    WHEAT: SAND
-}
+from constants.types_colors import RESOURCE_COLORS
 
 class PlayerTradeDialog(Modal):
     def __init__(self, proposer, all_players, on_propose, on_cancel):

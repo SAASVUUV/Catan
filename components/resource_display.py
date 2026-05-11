@@ -1,15 +1,8 @@
 import pygame
 from constants.types import ROCK, TREE, LAMB, BRICK, WHEAT
-from constants.colors import BEIGE_MEDIUM, BROWN_DARK, GRAY_STONE, GREEN_FOREST, SAND, RED_BRICK
+from constants.colors import BEIGE_MEDIUM, BROWN_DARK
+from constants.types_colors import RESOURCE_COLORS
 from models.inventory import TRADEABLE_RESOURCES
-
-RESOURCE_COLORS = {
-    ROCK: GRAY_STONE,
-    TREE: GREEN_FOREST,
-    LAMB: (240, 240, 240),
-    BRICK: RED_BRICK,
-    WHEAT: SAND
-}
 
 RESOURCE_NAMES = {
     ROCK: "Pedra",
