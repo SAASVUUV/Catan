@@ -1,7 +1,6 @@
 import pygame
 from .base_scene import BaseScene
-from core.player import Player
-from core.trade import BankTrade, PlayerTrade
+from models.player import Player
 from components.tabletop import Tabletop
 from components.button import Button
 from components.resource_display import ResourceDisplay
