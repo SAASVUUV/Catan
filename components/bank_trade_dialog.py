@@ -2,7 +2,7 @@ import pygame
 from components.modal import Modal
 from components.button import Button
 from core.trade import BankTrade
-from core.inventory import TRADEABLE_RESOURCES
+from models.inventory import TRADEABLE_RESOURCES
 from constants.colors import BEIGE_MEDIUM, BROWN_DARK, GOLD, GRAY_STONE, GREEN_FOREST, SAND, RED_BRICK
 from constants.types import ROCK, TREE, LAMB, BRICK, WHEAT
 

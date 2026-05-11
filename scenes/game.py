@@ -6,6 +6,7 @@ from components.button import Button
 from components.resource_display import ResourceDisplay
 from components.bank_trade_dialog import BankTradeDialog
 from components.player_trade_dialog import PlayerTradeDialog, TradeOfferDialog
+from core.trade import BankTrade, PlayerTrade
 from constants.colors import RED, BLUE, GREEN, BLACK, YELLOW
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
