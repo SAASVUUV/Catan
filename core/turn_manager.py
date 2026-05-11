@@ -22,5 +22,3 @@ class TurnManager:
                 self.normal_turn_index = 0
         else:
             self.normal_turn_index = (self.normal_turn_index + 1) % len(self.players)
-        
-        print(f"Próximo turno: {self.current_player.name} (Fase: {'Setup' if self.is_setup_phase else 'Normal'})")
