@@ -7,7 +7,7 @@ from components.resource_display import ResourceDisplay
 from components.bank_trade_dialog import BankTradeDialog
 from components.player_trade_dialog import PlayerTradeDialog, TradeOfferDialog
 from core.trade import BankTrade, PlayerTrade
-from constants.colors import RED, BLUE, GREEN, BLACK, YELLOW
+from constants.colors import RED, BLUE, GREEN, BLACK, YELLOW, SEA_BLUE
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class Game(BaseScene):
@@ -32,10 +32,10 @@ class Game(BaseScene):
         return self.players[self.turn_index]
 
     def _setup_ui(self):
-        self.resource_display = ResourceDisplay(10, SCREEN_HEIGHT - 85)
+        self.resource_display = ResourceDisplay(50, SCREEN_HEIGHT - 85)
         self.resource_display.set_player(self.current_player)
 
-        btn_x = 280
+        btn_x = 320
         btn_y = SCREEN_HEIGHT - 95
         self.btn_bank = Button(btn_x, btn_y, 100, 35, "Banco", font_size=16)
         self.btn_trade = Button(btn_x, btn_y + 40, 100, 35, "Trocar", font_size=16)
@@ -120,7 +120,7 @@ class Game(BaseScene):
         self.btn_trade.update()
 
     def render(self, surface: pygame.Surface):
-        surface.fill(BLACK)
+        surface.fill(SEA_BLUE)
         self.tabletop.render(surface)
 
         self.resource_display.render(surface)
