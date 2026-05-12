@@ -153,7 +153,6 @@ class Tabletop:
         return None
 
     def get_adjacent_tiles(self, house):
-        """Retorna os tiles adjacentes a uma casa."""
         adjacent = []
         for tile in self.tiles:
             houses = tile.extract_houses()
@@ -162,7 +161,6 @@ class Tabletop:
         return adjacent
 
     def distribute_initial_resources(self, player, house):
-        """RN18: Distribui recursos dos tiles adjacentes à segunda aldeia."""
         from constants.types import DESERT
         adjacent_tiles = self.get_adjacent_tiles(house)
         for tile in adjacent_tiles:

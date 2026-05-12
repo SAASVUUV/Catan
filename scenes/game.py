@@ -136,6 +136,5 @@ class Game(BaseScene):
             self.active_dialog.render(surface)
 
     def _on_settlement_placed(self, player, house):
-        """RN18: Distribui recursos automaticamente na segunda aldeia do setup."""
         if player.settlements_count == 2:
             self.tabletop.distribute_initial_resources(player, house)
