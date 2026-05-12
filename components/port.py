@@ -36,15 +36,12 @@ class Port:
         else:
             nx, ny = dx / dist, dy / dist
 
-        # Afasta ligeiramente o centro do sprite para que a água fique no mar
-        # e a base das pontes encoste na linha das casas. Ajuste este valor se necessário.
         distancia_mar = 18.0
         self.cx = mx + nx * distancia_mar
         self.cy = my + ny * distancia_mar
 
         self.x, self.y = self.cx, self.cy
 
-        # 3. CÁLCULO DE ROTAÇÃO DO SPRITE
         self.sprite = None
         if SpriteLoader:
             try:
@@ -73,7 +70,6 @@ class Port:
         self.ship = Circle(self.cx, self.cy, 12, cor_base)
 
     def render(self, surface):
-
         if self.sprite:
             surface.blit(self.sprite, self.rect.topleft)
         else:
