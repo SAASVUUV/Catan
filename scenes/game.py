@@ -10,6 +10,7 @@ from core.trade import BankTrade, PlayerTrade
 from constants.colors import RED, BLUE, GREEN, BLACK, YELLOW, SEA_BLUE
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
+
 class Game(BaseScene):
     def __init__(self, manager=None):
         self.manager = manager
@@ -59,9 +60,13 @@ class Game(BaseScene):
             self._handle_click(event.pos)
 
     def _handle_click(self, pos):
+        from components.house import House
         target = self.tabletop.get_buildable_at(pos)
         if target:
-            target.try_build(self.current_player)
+            was_empty = isinstance(target, House) and target.level == 0
+            if target.try_build(self.current_player):
+                if was_empty and target.level == 1:
+                    self._on_settlement_placed(self.current_player, target)
 
     def _open_bank_dialog(self):
         self.active_dialog = BankTradeDialog(
@@ -129,3 +134,8 @@ class Game(BaseScene):
 
         if self.active_dialog:
             self.active_dialog.render(surface)
+
+    def _on_settlement_placed(self, player, house):
+        """RN18: Distribui recursos automaticamente na segunda aldeia do setup."""
+        if player.settlements_count == 2:
+            self.tabletop.distribute_initial_resources(player, house)

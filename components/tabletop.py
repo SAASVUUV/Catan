@@ -6,7 +6,6 @@ from utils.myrandom import takesome
 from utils.sprites import SpriteLoader
 import pygame
 
-
 class Tabletop:
 
     def __init__(self, x0, y0, hex_radius):
@@ -152,6 +151,23 @@ class Tabletop:
             if road and road.collidepoint(pos):
                 return road
         return None
+
+    def get_adjacent_tiles(self, house):
+        """Retorna os tiles adjacentes a uma casa."""
+        adjacent = []
+        for tile in self.tiles:
+            houses = tile.extract_houses()
+            if house in houses:
+                adjacent.append(tile)
+        return adjacent
+
+    def distribute_initial_resources(self, player, house):
+        """RN18: Distribui recursos dos tiles adjacentes à segunda aldeia."""
+        from constants.types import DESERT
+        adjacent_tiles = self.get_adjacent_tiles(house)
+        for tile in adjacent_tiles:
+            if tile.terrain_type != DESERT:
+                player.inventory.add(tile.terrain_type, 1)
 
     def handle_event(self, event):
         for tile in self.tiles:

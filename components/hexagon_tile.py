@@ -4,9 +4,7 @@ from .road import Road
 from .house import House
 from .hover import Hover
 from utils.sprites import SpriteLoader
-import math
 import pygame
-
 
 class HexagonTile:
 
