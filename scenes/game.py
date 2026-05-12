@@ -7,8 +7,9 @@ from components.resource_display import ResourceDisplay
 from components.bank_trade_dialog import BankTradeDialog
 from components.player_trade_dialog import PlayerTradeDialog, TradeOfferDialog
 from core.trade import BankTrade, PlayerTrade
-from constants.colors import RED, BLUE, GREEN, BLACK, YELLOW
+from constants.colors import RED, BLUE, GREEN, BLACK, YELLOW, SEA_BLUE
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT
+
 
 class Game(BaseScene):
     def __init__(self, manager=None):
@@ -32,10 +33,10 @@ class Game(BaseScene):
         return self.players[self.turn_index]
 
     def _setup_ui(self):
-        self.resource_display = ResourceDisplay(10, SCREEN_HEIGHT - 85)
+        self.resource_display = ResourceDisplay(50, SCREEN_HEIGHT - 85)
         self.resource_display.set_player(self.current_player)
 
-        btn_x = 280
+        btn_x = 320
         btn_y = SCREEN_HEIGHT - 95
         self.btn_bank = Button(btn_x, btn_y, 100, 35, "Banco", font_size=16)
         self.btn_trade = Button(btn_x, btn_y + 40, 100, 35, "Trocar", font_size=16)
@@ -59,9 +60,13 @@ class Game(BaseScene):
             self._handle_click(event.pos)
 
     def _handle_click(self, pos):
+        from components.house import House
         target = self.tabletop.get_buildable_at(pos)
         if target:
-            target.try_build(self.current_player)
+            was_empty = isinstance(target, House) and target.level == 0
+            if target.try_build(self.current_player):
+                if was_empty and target.level == 1:
+                    self._on_settlement_placed(self.current_player, target)
 
     def _open_bank_dialog(self):
         self.active_dialog = BankTradeDialog(
@@ -120,7 +125,7 @@ class Game(BaseScene):
         self.btn_trade.update()
 
     def render(self, surface: pygame.Surface):
-        surface.fill(BLACK)
+        surface.fill(SEA_BLUE)
         self.tabletop.render(surface)
 
         self.resource_display.render(surface)
@@ -129,3 +134,7 @@ class Game(BaseScene):
 
         if self.active_dialog:
             self.active_dialog.render(surface)
+
+    def _on_settlement_placed(self, player, house):
+        if player.settlements_count == 2:
+            self.tabletop.distribute_initial_resources(player, house)
