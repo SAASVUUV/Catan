@@ -1,5 +1,6 @@
 import pygame
 from constants.types import ROCK, TREE, LAMB, BRICK, WHEAT
+from models.inventory import Inventory
 
 
 class Player:
@@ -17,13 +18,7 @@ class Player:
         self.victory_points = 0
 
         # Inventário de matérias-primas
-        self.resources = {
-            ROCK: 0,  # Minério
-            TREE: 0,  # Madeira
-            LAMB: 0,  # Lã
-            BRICK: 0,  # Argila
-            WHEAT: 0  # Cereais
-        }
+        self.inventory = Inventory()
 
     # --- VERIFICAÇÃO DE FASE DO JOGO ---
     def is_in_setup_phase(self) -> bool:
@@ -45,16 +40,16 @@ class Player:
 
     # --- VALIDAÇÃO DE CUSTOS DE MATÉRIA-PRIMA (RN24) ---
     def has_resources_for_road(self) -> bool:
-        return self.resources[BRICK] >= 1 and self.resources[TREE] >= 1
+        return self.inventory.has(BRICK, 1) and self.inventory.has(TREE, 1)
 
     def has_resources_for_settlement(self) -> bool:
-        return (self.resources[BRICK] >= 1 and
-                self.resources[TREE] >= 1 and
-                self.resources[LAMB] >= 1 and
-                self.resources[WHEAT] >= 1)
+        return (self.inventory.has(BRICK, 1) and
+                self.inventory.has(TREE, 1) and
+                self.inventory.has(LAMB, 1) and
+                self.inventory.has(WHEAT, 1))
 
     def has_resources_for_city(self) -> bool:
-        return self.resources[ROCK] >= 3 and self.resources[WHEAT] >= 2
+        return self.inventory.has(ROCK, 3) and self.inventory.has(WHEAT, 2)
 
     # --- AÇÕES PURAS DE ESTADO (Usadas no Setup) ---
     def add_road(self):
@@ -72,26 +67,26 @@ class Player:
     # --- AÇÕES FINANCEIRAS / COMPRA (Fase Principal - RF21) ---
     def buy_road(self, max_limit: int = 15) -> bool:
         if self.can_build_road(max_limit) and self.has_resources_for_road():
-            self.resources[BRICK] -= 1
-            self.resources[TREE] -= 1
+            self.inventory.remove(BRICK, 1)
+            self.inventory.remove(TREE, 1)
             self.add_road()
             return True
         return False
 
     def buy_settlement(self, max_limit: int = 5) -> bool:
         if self.can_build_settlement(max_limit) and self.has_resources_for_settlement():
-            self.resources[BRICK] -= 1
-            self.resources[TREE] -= 1
-            self.resources[LAMB] -= 1
-            self.resources[WHEAT] -= 1
+            self.inventory.remove(BRICK, 1)
+            self.inventory.remove(TREE, 1)
+            self.inventory.remove(LAMB, 1)
+            self.inventory.remove(WHEAT, 1)
             self.add_settlement()
             return True
         return False
 
     def buy_city(self, max_limit: int = 4) -> bool:
         if self.settlements_count > 0 and self.can_build_city(max_limit) and self.has_resources_for_city():
-            self.resources[ROCK] -= 3
-            self.resources[WHEAT] -= 2
+            self.inventory.remove(ROCK, 3)
+            self.inventory.remove(WHEAT, 2)
             self.upgrade_to_city()
             return True
         return False
