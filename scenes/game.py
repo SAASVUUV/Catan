@@ -1,6 +1,7 @@
 import pygame
 from .base_scene import BaseScene
 from models.player import Player
+from core.turn_manager import TurnManager
 from components.tabletop import Tabletop
 from components.button import Button
 from components.resource_display import ResourceDisplay
@@ -20,7 +21,7 @@ class Game(BaseScene):
             Player(3, "Player 3", GREEN),
             Player(4, "Player 4", YELLOW)
         ]
-        self.turn_index = 0
+        self.turn_manager = TurnManager(self.players)
         self.tabletop = Tabletop(100, 100, 50)
         self._setup_ui()
         self.active_dialog = None
@@ -30,7 +31,7 @@ class Game(BaseScene):
 
     @property
     def current_player(self):
-        return self.players[self.turn_index]
+        return self.turn_manager.current_player
 
     def _setup_ui(self):
         self.resource_display = ResourceDisplay(50, SCREEN_HEIGHT - 85)
@@ -67,7 +68,10 @@ class Game(BaseScene):
             if target.try_build(self.current_player):
                 if was_empty and target.level == 1:
                     self._on_settlement_placed(self.current_player, target)
+                self.turn_manager.next_turn()
+                self.resource_display.set_player(self.current_player)
 
+    # ---------- Todo o código de Dialogs da development foi mantido ----------
     def _open_bank_dialog(self):
         self.active_dialog = BankTradeDialog(
             self.current_player,
