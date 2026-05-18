@@ -20,6 +20,8 @@ class TurnControls:
         self.height = int(140 * scale)
         self.phase = TurnPhase.DICE
         self.is_setup = True
+        self.setup_needs_house = True
+        self.setup_needs_road = True
 
         font_size = int(22 * scale)
         caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
@@ -39,9 +41,11 @@ class TurnControls:
         self.btn_next = Button(btn_x, btn_y, btn_width, btn_height, "Próxima Fase", font_size=btn_font)
         self.btn_end = Button(btn_x, btn_y, btn_width, btn_height, "Terminar Turno", font_size=btn_font)
 
-    def set_state(self, phase, dice_result, is_setup):
+    def set_state(self, phase, dice_result, is_setup, setup_needs_house=False, setup_needs_road=False):
         self.phase = phase
         self.is_setup = is_setup
+        self.setup_needs_house = setup_needs_house
+        self.setup_needs_road = setup_needs_road
         if dice_result:
             self.dice.set_values(dice_result[0], dice_result[1])
         else:
@@ -80,8 +84,18 @@ class TurnControls:
         if self.is_setup:
             setup_text = self.font.render("Fase de Setup", True, BROWN_DARK)
             text_x = self.x + (self.width - setup_text.get_width()) // 2
-            text_y = self.y + (self.height - setup_text.get_height()) // 2
-            surface.blit(setup_text, (text_x, text_y))
+            surface.blit(setup_text, (text_x, self.y + 20))
+
+            needs = []
+            if self.setup_needs_house:
+                needs.append("Casa")
+            if self.setup_needs_road:
+                needs.append("Estrada")
+            if needs:
+                needs_text = self.font.render(f"Falta: {' + '.join(needs)}", True, BROWN_DARK)
+                text_x = self.x + (self.width - needs_text.get_width()) // 2
+                text_y = self.y + (self.height - needs_text.get_height()) // 2 + 15
+                surface.blit(needs_text, (text_x, text_y))
             return
 
         phase_label = PHASE_LABELS.get(self.phase, "")

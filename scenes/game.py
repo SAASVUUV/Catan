@@ -122,10 +122,14 @@ class Game(BaseScene):
 
     def _update_turn_state(self):
         self.player_list.set_current_player(self.current_player)
+        setup_needs_house = self.turn_manager.is_setup_phase and not self.turn_manager.setup_built_house
+        setup_needs_road = self.turn_manager.is_setup_phase and not self.turn_manager.setup_built_road
         self.turn_controls.set_state(
             self.turn_manager.current_phase,
             self.turn_manager.last_dice_roll,
-            self.turn_manager.is_setup_phase
+            self.turn_manager.is_setup_phase,
+            setup_needs_house,
+            setup_needs_road
         )
         self.resource_display.set_player(self.current_player)
         can_trade = self._can_trade()
@@ -134,6 +138,7 @@ class Game(BaseScene):
 
     def _handle_click(self, pos):
         from components.house import House
+        from components.road import Road
         target = self.tabletop.get_buildable_at(pos)
         if target:
             was_empty = isinstance(target, House) and target.level == 0
@@ -141,7 +146,12 @@ class Game(BaseScene):
                 if was_empty and target.level == 1:
                     self._on_settlement_placed(self.current_player, target)
                 if self.turn_manager.is_setup_phase:
-                    self.turn_manager.next_turn()
+                    if isinstance(target, House):
+                        self.turn_manager.setup_record_house()
+                    elif isinstance(target, Road):
+                        self.turn_manager.setup_record_road()
+                    if self.turn_manager.setup_turn_complete():
+                        self.turn_manager.next_turn()
                 self._update_turn_state()
 
     # ---------- Todo o código de Dialogs da development foi mantido ----------
