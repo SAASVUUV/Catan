@@ -120,7 +120,7 @@ class Tabletop:
                 p1 = port.house_bottom
                 p2 = port.house_bottom_left
 
-            self.ports.append(Port(p1, p2, takesome(port_type)))
+            self.ports.append(Port(p1, p2, takesome(port_type), tile_center=(port.x, port.y)))
 
         self._link_entities()
 

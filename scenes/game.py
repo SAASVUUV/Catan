@@ -26,7 +26,12 @@ class Game(BaseScene):
         ]
         self.turn_manager = TurnManager(self.players)
         self.turn_manager.shuffle_player_order()
-        self.tabletop = Tabletop(100, 100, 50)
+
+        hex_radius = int(SCREEN_HEIGHT * 0.085)
+        board_x = int(SCREEN_WIDTH * 0.2)
+        board_y = int(SCREEN_HEIGHT * 0.15)
+        self.tabletop = Tabletop(board_x, board_y, hex_radius)
+
         self._setup_ui()
         self.active_dialog = None
         self.pending_offer = None
@@ -39,17 +44,28 @@ class Game(BaseScene):
         return self.turn_manager.current_player
 
     def _setup_ui(self):
-        self.resource_display = ResourceDisplay(50, SCREEN_HEIGHT - 85)
+        scale = SCREEN_HEIGHT / 600.0
+        margin = int(SCREEN_WIDTH * 0.02)
+        bottom_margin = int(SCREEN_HEIGHT * 0.15)
+
+        self.resource_display = ResourceDisplay(SCREEN_WIDTH * 0.2, SCREEN_HEIGHT - bottom_margin, scale)
         self.resource_display.set_player(self.current_player)
 
-        btn_x = 320
-        btn_y = SCREEN_HEIGHT - 95
-        self.btn_bank = Button(btn_x, btn_y, 100, 35, "Banco", font_size=16)
-        self.btn_trade = Button(btn_x, btn_y + 40, 100, 35, "Trocar", font_size=16)
+        btn_w = int(88 * scale)
+        btn_h = int(33 * scale)
+        btn_font = int(15 * scale)
+        btn_x = int(SCREEN_WIDTH * 0.45)
+        btn_y = SCREEN_HEIGHT - bottom_margin - 10
+        btn_gap = int(10 * scale)
+        self.btn_bank = Button(btn_x, btn_y, btn_w, btn_h, "Banco", font_size=btn_font)
+        self.btn_trade = Button(btn_x, btn_y + btn_h + btn_gap, btn_w, btn_h, "Trocar", font_size=btn_font)
 
-        panel_width = 140
-        self.player_list = PlayerListPanel(SCREEN_WIDTH - panel_width - 10, 10, panel_width, self.players)
-        self.turn_controls = TurnControls(SCREEN_WIDTH - panel_width - 10, SCREEN_HEIGHT - 115, panel_width)
+        panel_width = int(240 * scale)
+        panel_width = max(200, min(panel_width, 350))
+        self.player_list = PlayerListPanel(SCREEN_WIDTH - panel_width - margin, margin, panel_width, self.players, scale)
+
+        turn_ctrl_height = int(140 * scale)
+        self.turn_controls = TurnControls(SCREEN_WIDTH - panel_width - margin, SCREEN_HEIGHT - turn_ctrl_height - margin, panel_width, scale)
 
     def handle_event(self, event: pygame.event.Event):
         if self.active_dialog:

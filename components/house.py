@@ -78,7 +78,7 @@ class House(Buildable):
 
     def _draw_house(self, surface):
         key = "settlement" if self.level == 1 else "city"
-        size = (36, 36) if self.level == 1 else (48, 48)
+        size = (72, 72) if self.level == 1 else (96, 96)
         c = self.owner.color if self.owner else (200, 200, 200)
 
         sprite = SpriteLoader().get_tinted_sprite(key, c, size)

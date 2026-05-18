@@ -13,24 +13,31 @@ PHASE_LABELS = {
 
 
 class TurnControls:
-    def __init__(self, x, y, width):
+    def __init__(self, x, y, width, scale: float = 1.0):
         self.x = x
         self.y = y
         self.width = width
-        self.height = 105
+        self.height = int(140 * scale)
         self.phase = TurnPhase.DICE
         self.is_setup = True
 
+        font_size = int(22 * scale)
         caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
-        self.font = pygame.font.Font(caminho_fonte, 14)
+        self.font = pygame.font.Font(caminho_fonte, font_size)
 
-        self.dice = Dice(x + (width - 74) // 2, y + 30, size=32)
+        dice_size = int(48 * scale)
+        dice_spacing = int(10 * scale)
+        dice_total_width = dice_size * 2 + dice_spacing
+        self.dice = Dice(x + (width - dice_total_width) // 2, y + int(40 * scale), size=dice_size)
 
-        btn_width = width - 20
-        btn_y = y + 70
-        self.btn_roll = Button(x + 10, btn_y, btn_width, 28, "Lançar Dados", font_size=14)
-        self.btn_next = Button(x + 10, btn_y, btn_width, 28, "Próxima Fase", font_size=14)
-        self.btn_end = Button(x + 10, btn_y, btn_width, 28, "Terminar Turno", font_size=14)
+        btn_width = width - int(20 * scale)
+        btn_height = int(40 * scale)
+        btn_font = int(20 * scale)
+        btn_y = y + self.height - btn_height - int(10 * scale)
+        btn_x = x + int(10 * scale)
+        self.btn_roll = Button(btn_x, btn_y, btn_width, btn_height, "Lançar Dados", font_size=btn_font)
+        self.btn_next = Button(btn_x, btn_y, btn_width, btn_height, "Próxima Fase", font_size=btn_font)
+        self.btn_end = Button(btn_x, btn_y, btn_width, btn_height, "Terminar Turno", font_size=btn_font)
 
     def set_state(self, phase, dice_result, is_setup):
         self.phase = phase
@@ -73,20 +80,17 @@ class TurnControls:
         if self.is_setup:
             setup_text = self.font.render("Fase de Setup", True, BROWN_DARK)
             text_x = self.x + (self.width - setup_text.get_width()) // 2
-            surface.blit(setup_text, (text_x, self.y + 40))
+            text_y = self.y + (self.height - setup_text.get_height()) // 2
+            surface.blit(setup_text, (text_x, text_y))
             return
 
         phase_label = PHASE_LABELS.get(self.phase, "")
         phase_text = self.font.render(f"Fase: {phase_label}", True, BROWN_DARK)
         phase_x = self.x + (self.width - phase_text.get_width()) // 2
-        surface.blit(phase_text, (phase_x, self.y + 8))
+        surface.blit(phase_text, (phase_x, self.y + 10))
 
         if self.dice.visible:
             self.dice.render(surface)
-            # dice_sum = self.dice.die1 + self.dice.die2
-            # sum_text = self.font.render(f"= {dice_sum}", True, BLACK)
-            # sum_x = self.dice.x + 74 + 5
-            # surface.blit(sum_text, (sum_x, self.y + 40))
 
         if self.phase == TurnPhase.DICE:
             self.btn_roll.render(surface)
