@@ -26,11 +26,13 @@ def draw_bot_icon(surface, cx, cy, size, color):
 class PlayerSlot:
     SIZE = 72
 
-    def __init__(self, x, y, index):
-        self.rect = pygame.Rect(x, y, self.SIZE, self.SIZE)
+    def __init__(self, x, y, index, size=None):
+        self.size = size if size else self.SIZE
+        self.rect = pygame.Rect(x, y, self.size, self.size)
         self.index = index
         self.is_bot = (index == 3)
-        self.font = pygame.font.SysFont("Arial", 11)
+        font_size = max(11, int(self.size * 0.15))
+        self.font = pygame.font.SysFont("Arial", font_size)
         self.hover = Hover(self.rect.collidepoint, on_mouse_click=self.on_mouse_click)
         self.hovered = False
         self.mouse_in = False
@@ -60,11 +62,12 @@ class PlayerSlot:
         pygame.draw.rect(surface, self._background_color(), self.rect, border_radius=10)
         pygame.draw.rect(surface, self._border_color(), self.rect, 2, border_radius=10)
 
-        cx, cy = self.rect.centerx, self.rect.centery - 6
+        icon_size = int(self.size * 0.6)
+        cx, cy = self.rect.centerx, self.rect.centery - int(self.size * 0.08)
         if self.is_bot:
-            draw_bot_icon(surface, cx, cy, 44, self._icon_color())
+            draw_bot_icon(surface, cx, cy, icon_size, self._icon_color())
         else:
-            draw_person_icon(surface, cx, cy, 44, self._icon_color())
+            draw_person_icon(surface, cx, cy, icon_size, self._icon_color())
 
         label = self._label_text()
         txt = self.font.render(label, True, self._icon_color())

@@ -23,10 +23,10 @@ class Configurations(BaseScene):
         w0 = W * 0.1
         w1 = W * 0.5
         h0 = H * 0.1
-        bar_w = W*0.4
-        bar_h = 8
-        gap_h = 60
-        font_size = 40
+        bar_w = W*0.45
+        bar_h = 12
+        gap_h = 120
+        font_size = 80
 
         self.slider_master_sound_label = Label("Volume Master", w0, h0-bar_h*2, font_size)
         self.slider_master_sound = Slider(w1, h0, bar_w, bar_h)
@@ -37,8 +37,8 @@ class Configurations(BaseScene):
         self.slider_sfx_sound_label = Label("Volume SFX", w0, h0-bar_h*2 + 2*gap_h, font_size)
         self.slider_sfx_sound = Slider(w1, h0 + 2 * gap_h, bar_w, bar_h)
 
-        self.aracno_label = Label("Modo Aracnofobia", w0, H * 0.9, font_size)
-        self.aracno_button = Checkbox(W * 0.9 - 30, H * 0.9, 30)
+        self.aracno_label = Label("Modo Aracnofobia", w0, h0 + 3 * gap_h, font_size)
+        self.aracno_button = Checkbox(w1, h0 + 3 * gap_h + 10, 60)
 
         self.btn_back = BackButton(20, 20)
  
