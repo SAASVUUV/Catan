@@ -22,30 +22,38 @@ class MainMenu(BaseScene):
 
     def _load_fonts(self):
         caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        title_size = int(self.screen_height * 0.2)
+        label_size = int(self.screen_height * 0.040)
         try:
-            self.title_font = pygame.font.Font(caminho_fonte, 120)
-            self.label_font = pygame.font.Font(caminho_fonte, 20)
+            self.title_font = pygame.font.Font(caminho_fonte, title_size)
+            self.label_font = pygame.font.Font(caminho_fonte, label_size)
         except FileNotFoundError:
             print("Fonte não encontrada! Usando fallback.")
-            self.title_font = pygame.font.SysFont("serif", 100, bold=True)
-            self.label_font = pygame.font.SysFont("serif", 20)
+            self.title_font = pygame.font.SysFont("serif", title_size, bold=True)
+            self.label_font = pygame.font.SysFont("serif", label_size)
 
     def _init_buttons(self):
-        W = self.screen_width 
+        W = self.screen_width
+        H = self.screen_height
         centro_alinhamento_x = W // 3.5
 
-        bw, bh, gap = 250, 50, 10
-        btn_y_start = 260
+        bw = int(W * 0.25)
+        bh = int(H * 0.09)
+        gap = int(H * 0.04)
+        font_size = int(H * 0.05)
+        btn_y_start = int(H * 0.3)
 
         bx = centro_alinhamento_x - (bw // 2)
 
-        self.btn_start   = Button(bx, btn_y_start,                  bw, bh, "Iniciar Jogo",  28, shadow=True)
-        self.btn_config  = Button(bx, btn_y_start + bh + gap,       bw, bh, "Configurações", 28, shadow=True)
-        self.btn_quit    = Button(bx, btn_y_start + (bh + gap) * 2, bw, bh, "Sair do Jogo",  28, shadow=True)
+        self.btn_start   = Button(bx, btn_y_start,                  bw, bh, "Iniciar Jogo",  font_size, shadow=True)
+        self.btn_config  = Button(bx, btn_y_start + bh + gap,       bw, bh, "Configurações", font_size, shadow=True)
+        self.btn_quit    = Button(bx, btn_y_start + (bh + gap) * 2, bw, bh, "Sair do Jogo",  font_size, shadow=True)
 
     def _init_board_image(self):
-        board_size = 300
-        self.board_rect = pygame.Rect(self.screen_width - board_size - 30, 20, board_size, board_size)
+        board_size = int(self.screen_height * 0.55)
+        margin = int(self.screen_width * 0.03)
+        top_margin = int(self.screen_height * 0.08)
+        self.board_rect = pygame.Rect(self.screen_width - board_size - margin, top_margin, board_size, board_size)
         try:
             imagem_original = pygame.image.load("./assets/images/boardImage.png").convert_alpha()
             self.board_image = pygame.transform.smoothscale(imagem_original, (board_size, board_size))
@@ -55,15 +63,15 @@ class MainMenu(BaseScene):
             self.board_image.fill((255, 0, 0))
 
     def _init_slots(self):
-        slot_s = PlayerSlot.SIZE
-        gap_s = 10
-        grid_x = self.screen_width // 2 + 20
-        grid_y = self.screen_height - (slot_s * 2 + gap_s) - 60
+        slot_s = int(self.screen_height * 0.12)
+        gap_s = int(self.screen_height * 0.015)
+        grid_x = int(self.screen_width * 0.45)
+        grid_y = self.screen_height - (slot_s * 2 + gap_s) - int(self.screen_height * 0.08)
         self.slots = [
-            PlayerSlot(grid_x, grid_y, 0),
-            PlayerSlot(grid_x + slot_s + gap_s, grid_y, 1),
-            PlayerSlot(grid_x, grid_y + slot_s + gap_s, 2),
-            PlayerSlot(grid_x + slot_s + gap_s, grid_y + slot_s + gap_s, 3),
+            PlayerSlot(grid_x, grid_y, 0, slot_s),
+            PlayerSlot(grid_x + slot_s + gap_s, grid_y, 1, slot_s),
+            PlayerSlot(grid_x, grid_y + slot_s + gap_s, 2, slot_s),
+            PlayerSlot(grid_x + slot_s + gap_s, grid_y + slot_s + gap_s, 3, slot_s),
         ]
  
     def handle_event(self, event):
@@ -94,7 +102,7 @@ class MainMenu(BaseScene):
         texto_titulo = self.title_font.render("CATAN", True, C.TEXT_TITLE)
 
         title_center_x = self.screen_width // 3.5
-        top_y = 60
+        top_y = int(self.screen_height * 0.08)
 
         surface.blit(texto_sombra, texto_sombra.get_rect(centerx=title_center_x + 4, top=top_y + 4))
         surface.blit(texto_titulo, texto_titulo.get_rect(centerx=title_center_x, top=top_y))

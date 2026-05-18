@@ -48,7 +48,7 @@ class Road(Buildable):
     def render(self, surface):
         if self.owner:
             dx, dy = self.x1 - self.x0, self.y1 - self.y0
-            length = int(math.hypot(dx, dy))
+            length = int(math.hypot(dx, dy) * 1.15)
 
             base = SpriteLoader().get_tinted_sprite("road", self.owner.color, (16, length))
             ang = -math.degrees(math.atan2(dy, dx)) - 90

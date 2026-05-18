@@ -120,7 +120,7 @@ class Tabletop:
                 p1 = port.house_bottom
                 p2 = port.house_bottom_left
 
-            self.ports.append(Port(p1, p2, takesome(port_type)))
+            self.ports.append(Port(p1, p2, takesome(port_type), tile_center=(port.x, port.y)))
 
         self._link_entities()
 
@@ -166,6 +166,15 @@ class Tabletop:
         for tile in adjacent_tiles:
             if tile.terrain_type != DESERT:
                 player.inventory.add(tile.terrain_type, 1)
+
+    def distribute_resources_for_roll(self, dice_sum):
+        from constants.types import DESERT
+        for tile in self.tiles:
+            if tile.number == dice_sum and tile.terrain_type != DESERT:
+                for house in tile.extract_houses():
+                    if house and house.owner and house.level > 0:
+                        amount = 2 if house.level == 2 else 1
+                        house.owner.inventory.add(tile.terrain_type, amount)
 
     def handle_event(self, event):
         for tile in self.tiles:

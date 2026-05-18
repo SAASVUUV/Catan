@@ -27,7 +27,7 @@ class HexagonTile:
         if type != DESERT and number:
             loader = SpriteLoader()
             # RNF7: Fichas 6 e 8 renderizadas em tamanho maior para destaque de probabilidade
-            tamanho = (54, 54) if number in (6, 8) else (42, 42)
+            tamanho = (108, 108) if number in (6, 8) else (84, 84)
             self.number_sprite = loader.get_sprite(f"{number}.png", target_size=tamanho)
             self.number_rect = self.number_sprite.get_rect(center=(int(x), int(y)))
 

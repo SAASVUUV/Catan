@@ -36,7 +36,7 @@ class Port:
         else:
             nx, ny = dx / dist, dy / dist
 
-        distancia_mar = 18.0
+        distancia_mar = 40.0
         self.cx = mx + nx * distancia_mar
         self.cy = my + ny * distancia_mar
 
@@ -47,10 +47,10 @@ class Port:
             try:
                 loader = SpriteLoader()
                 if hasattr(loader, 'get_port_sprite'):
-                    base_sprite = loader.get_port_sprite(self.type, target_size=(46, 46))
+                    base_sprite = loader.get_port_sprite(self.type, target_size=(92, 92))
                 else:
                     filename = f"harbour_{'any' if type == GENERIC else type}.png"
-                    base_sprite = loader.get_sprite(filename, target_size=(46, 46))
+                    base_sprite = loader.get_sprite(filename, target_size=(92, 92))
 
                 costa_dx = self.house2.x - self.house1.x
                 costa_dy = self.house2.y - self.house1.y
