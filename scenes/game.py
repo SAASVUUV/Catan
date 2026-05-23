@@ -142,7 +142,13 @@ class Game(BaseScene):
         target = self.tabletop.get_buildable_at(pos)
         if target:
             was_empty = isinstance(target, House) and target.level == 0
-            if target.try_build(self.current_player):
+            # Passa all_roads se for uma estrada
+            if isinstance(target, Road):
+                result = target.try_build(self.current_player, self.tabletop.roads)
+            else:
+                result = target.try_build(self.current_player)
+            
+            if result:
                 if was_empty and target.level == 1:
                     self._on_settlement_placed(self.current_player, target)
                 if self.turn_manager.is_setup_phase:

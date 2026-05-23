@@ -18,15 +18,43 @@ class Road(Buildable):
         self.house_a = None
         self.house_b = None
 
-    def _can_place_road(self, player) -> bool:
+    def _can_place_road(self, player, all_roads=None) -> bool:
         if self.owner is not None or not player.can_build_road(MAX_ROADS):
             return False
         if not player.is_in_setup_phase() and not player.has_resources_for_road():
             return False
+        # RN25: Estradas devem ser adjacentes a outras estruturas do mesmo jogador (exceto na fase de setup)
+        if not player.is_in_setup_phase() and all_roads is not None:
+            if not self._is_adjacent_to_player(player, all_roads):
+                return False
         return True
 
-    def try_build(self, player) -> bool:
-        if not self._can_place_road(player):
+    def _is_adjacent_to_player(self, player, all_roads) -> bool:
+        """
+        Verifica se a estrada é adjacente a:
+        - Outra estrada do mesmo jogador
+        - Uma casa/cidade do mesmo jogador
+        """
+        # Verifica se tem casa/cidade do jogador nas extremidades
+        if self.house_a and self.house_a.owner is player:
+            return True
+        if self.house_b and self.house_b.owner is player:
+            return True
+        
+        # Verifica se compartilha uma extremidade com outra estrada do mesmo jogador
+        for road in all_roads:
+            if road is None or road is self or road.owner is not player:
+                continue
+            # Verifica se compartilham a extremidade (x0, y0)
+            if road.house_a is self.house_a or road.house_b is self.house_a:
+                return True
+            if road.house_a is self.house_b or road.house_b is self.house_b:
+                return True
+        
+        return False
+
+    def try_build(self, player, all_roads=None) -> bool:
+        if not self._can_place_road(player, all_roads):
             self._invalid_timer = 0.4
             return False
 
