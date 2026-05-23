@@ -17,11 +17,12 @@ class TurnControls:
         self.x = x
         self.y = y
         self.width = width
-        self.height = int(140 * scale)
+        self.height = int(190 * scale)
         self.phase = TurnPhase.DICE
         self.is_setup = True
         self.setup_needs_house = True
         self.setup_needs_road = True
+        self.time_left = 90.0
 
         font_size = int(22 * scale)
         caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
@@ -30,7 +31,7 @@ class TurnControls:
         dice_size = int(48 * scale)
         dice_spacing = int(10 * scale)
         dice_total_width = dice_size * 2 + dice_spacing
-        self.dice = Dice(x + (width - dice_total_width) // 2, y + int(40 * scale), size=dice_size)
+        self.dice = Dice(x + (width - dice_total_width) // 2, y + int(75 * scale), size=dice_size)
 
         btn_width = width - int(20 * scale)
         btn_height = int(40 * scale)
@@ -40,6 +41,9 @@ class TurnControls:
         self.btn_roll = Button(btn_x, btn_y, btn_width, btn_height, "Lançar Dados", font_size=btn_font)
         self.btn_next = Button(btn_x, btn_y, btn_width, btn_height, "Próxima Fase", font_size=btn_font)
         self.btn_end = Button(btn_x, btn_y, btn_width, btn_height, "Terminar Turno", font_size=btn_font)
+
+    def set_timer(self, time_left: float):
+        self.time_left = time_left
 
     def set_state(self, phase, dice_result, is_setup, setup_needs_house=False, setup_needs_road=False):
         self.phase = phase
@@ -81,10 +85,18 @@ class TurnControls:
         pygame.draw.rect(surface, BEIGE_LIGHT, rect, border_radius=8)
         pygame.draw.rect(surface, BROWN_DARK, rect, width=2, border_radius=8)
 
+        mins = int(self.time_left) // 60
+        secs = int(self.time_left) % 60
+        timer_color = (200, 40, 40) if self.time_left <= 15 else BROWN_DARK
+        timer_text = self.font.render(f"Tempo: {mins}:{secs:02d}", True, timer_color)
+        timer_x = self.x + (self.width - timer_text.get_width()) // 2
+
         if self.is_setup:
             setup_text = self.font.render("Fase de Setup", True, BROWN_DARK)
             text_x = self.x + (self.width - setup_text.get_width()) // 2
-            surface.blit(setup_text, (text_x, self.y + 20))
+            surface.blit(setup_text, (text_x, self.y + 15))
+
+            surface.blit(timer_text, (timer_x, self.y + 50))
 
             needs = []
             if self.setup_needs_house:
@@ -102,6 +114,8 @@ class TurnControls:
         phase_text = self.font.render(f"Fase: {phase_label}", True, BROWN_DARK)
         phase_x = self.x + (self.width - phase_text.get_width()) // 2
         surface.blit(phase_text, (phase_x, self.y + 10))
+
+        surface.blit(timer_text, (timer_x, self.y + 40))
 
         if self.dice.visible:
             self.dice.render(surface)
