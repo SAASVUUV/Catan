@@ -2,6 +2,7 @@ import math
 import pygame
 from .buildable import Buildable
 from utils.sprites import SpriteLoader
+from utils.sound import SoundManager
 
 MAX_ROADS = 15
 
@@ -56,6 +57,7 @@ class Road(Buildable):
     def try_build(self, player, all_roads=None) -> bool:
         if not self._can_place_road(player, all_roads):
             self._invalid_timer = 0.4
+            SoundManager().play('invalid_action')
             return False
 
         if player.is_in_setup_phase():
@@ -63,6 +65,7 @@ class Road(Buildable):
         else:
             if not player.buy_road(MAX_ROADS):
                 self._invalid_timer = 0.4
+                SoundManager().play('invalid_action')
                 return False
 
         self.owner = player

@@ -13,6 +13,7 @@ from core.trade import BankTrade, PlayerTrade
 from constants.colors import RED, BLUE, GREEN, BLACK, YELLOW, SEA_BLUE
 from constants.phases import TurnPhase
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from utils.sound import SoundManager
 
 
 class Game(BaseScene):
@@ -108,6 +109,7 @@ class Game(BaseScene):
         return self.turn_manager.current_phase == TurnPhase.CONSTRUCTION
 
     def _do_dice_roll(self):
+        SoundManager().play('dice_roll')
         self.turn_manager.roll_dice()
         self.tabletop.distribute_resources_for_roll(self.turn_manager.dice_sum)
         self._update_turn_state()
@@ -145,9 +147,11 @@ class Game(BaseScene):
             if self.turn_manager.is_setup_phase:
                 if isinstance(target, House) and self.turn_manager.setup_built_house:
                     target._invalid_timer = 0.4  # Mostrar indicador visual
+                    SoundManager().play('invalid_action')
                     return  # Já construiu uma casa neste turno de setup
                 if isinstance(target, Road) and self.turn_manager.setup_built_road:
                     target._invalid_timer = 0.4  # Mostrar indicador visual
+                    SoundManager().play('invalid_action')
                     return  # Já construiu uma estrada neste turno de setup
             
             was_empty = isinstance(target, House) and target.level == 0
@@ -159,11 +163,14 @@ class Game(BaseScene):
             
             if result:
                 if was_empty and target.level == 1:
+                    SoundManager().play('construction')
                     self._on_settlement_placed(self.current_player, target)
                 if self.turn_manager.is_setup_phase:
                     if isinstance(target, House):
+                        SoundManager().play('construction')
                         self.turn_manager.setup_record_house()
                     elif isinstance(target, Road):
+                        SoundManager().play('road')
                         self.turn_manager.setup_record_road()
                     if self.turn_manager.setup_turn_complete():
                         self.turn_manager.next_turn()
