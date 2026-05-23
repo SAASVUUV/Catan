@@ -141,6 +141,15 @@ class Game(BaseScene):
         from components.road import Road
         target = self.tabletop.get_buildable_at(pos)
         if target:
+            # RN26: Durante setup, limitar 1 casa e 1 estrada por turno
+            if self.turn_manager.is_setup_phase:
+                if isinstance(target, House) and self.turn_manager.setup_built_house:
+                    target._invalid_timer = 0.4  # Mostrar indicador visual
+                    return  # Já construiu uma casa neste turno de setup
+                if isinstance(target, Road) and self.turn_manager.setup_built_road:
+                    target._invalid_timer = 0.4  # Mostrar indicador visual
+                    return  # Já construiu uma estrada neste turno de setup
+            
             was_empty = isinstance(target, House) and target.level == 0
             # Passa all_roads se for uma estrada
             if isinstance(target, Road):
