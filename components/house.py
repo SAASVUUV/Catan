@@ -2,6 +2,7 @@ import pygame
 from .circle import Circle
 from .buildable import Buildable
 from utils.sprites import SpriteLoader
+from utils.sound import SoundManager
 
 
 class House(Buildable):
@@ -36,6 +37,7 @@ class House(Buildable):
         if self.level == 0:
             if not self._can_place_settlement(player):
                 self._invalid_timer = 0.4
+                SoundManager().play('invalid_action')
                 return False
 
             if player.is_in_setup_phase():
@@ -53,10 +55,12 @@ class House(Buildable):
         if self.level == 1 and self.owner is player:
             if not self._can_upgrade_to_city(player):
                 self._invalid_timer = 0.4
+                SoundManager().play('invalid_action')
                 return False
 
             if not player.buy_city(4):
                 self._invalid_timer = 0.4
+                SoundManager().play('invalid_action')
                 return False
 
             self.level = 2

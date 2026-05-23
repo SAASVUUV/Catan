@@ -2,11 +2,14 @@ import sys
 import pygame
 from core.scene_manager import SceneManager
 from scenes.main_menu import MainMenu
+from utils.sound import SoundManager
 import settings
  
  
 def run():
     pygame.init()
+    pygame.mixer.init()
+    SoundManager()  # Pré-carrega os sons
     if settings.FULLSCREEN:
         screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     else:
