@@ -14,11 +14,17 @@ class Player:
         self.cities_count = 0
         self.roads_count = 0
 
-        # Pontos de vitória acumulados
-        self.victory_points = 0
+        # Cartas de desenvolvimento e Ponto de Vitória
+        self.development_cards = []
+        self.victory_point_cards = []
 
         # Inventário de matérias-primas
         self.inventory = Inventory()
+
+    @property
+    def victory_points(self):
+        """RN6, RN8: Calcula o total de pontos de vitória do jogador."""
+        return self.settlements_count + (self.cities_count * 2) + len(self.victory_point_cards)
 
     # --- VERIFICAÇÃO DE FASE DO JOGO ---
     def is_in_setup_phase(self) -> bool:
@@ -57,12 +63,10 @@ class Player:
 
     def add_settlement(self):
         self.settlements_count += 1
-        self.victory_points += 1
 
     def upgrade_to_city(self):
         self.settlements_count -= 1
-        self.cities_count += 1
-        self.victory_points += 1  # Ganho líquido de +1 ponto (aldeia vale 1, cidade vale 2)
+        self.cities_count += 1 
 
     # --- AÇÕES FINANCEIRAS / COMPRA (Fase Principal - RF21) ---
     def buy_road(self, max_limit: int = 15) -> bool:

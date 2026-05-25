@@ -9,9 +9,12 @@ from components.bank_trade_dialog import BankTradeDialog
 from components.player_trade_dialog import PlayerTradeDialog, TradeOfferDialog
 from components.player_list_panel import PlayerListPanel
 from components.turn_controls import TurnControls
+from components.development_card_display import DevelopmentCardDisplay
+from components.development_card_dialog import DevelopmentCardDialog
 from core.trade import BankTrade, PlayerTrade
 from constants.colors import RED, BLUE, GREEN, BLACK, YELLOW, SEA_BLUE
 from constants.phases import TurnPhase
+from constants.victory_points import CHAPEL, LIBRARY, MARKET
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
@@ -24,6 +27,11 @@ class Game(BaseScene):
             Player(3, "Player 3", GREEN),
             Player(4, "Player 4", YELLOW)
         ]
+
+        """ # Para teste: dar cartas aos jogadores
+        self.players[0].victory_point_cards.append(CHAPEL)
+        self.players[1].victory_point_cards.extend([LIBRARY, MARKET]) """
+
         self.turn_manager = TurnManager(self.players)
         self.turn_manager.shuffle_player_order()
 
@@ -67,9 +75,18 @@ class Game(BaseScene):
         turn_ctrl_height = int(140 * scale)
         self.turn_controls = TurnControls(SCREEN_WIDTH - panel_width - margin, SCREEN_HEIGHT - turn_ctrl_height - margin, panel_width, scale)
 
+        card_display_x = int(SCREEN_WIDTH * 0.55)
+        card_display_y = SCREEN_HEIGHT - bottom_margin - 10
+        self.card_display = DevelopmentCardDisplay(card_display_x, card_display_y, scale, on_click=self._open_dev_card_dialog)
+
     def handle_event(self, event: pygame.event.Event):
         if self.active_dialog:
-            self.active_dialog.handle_event(event)
+            if self.active_dialog.handle_event(event):
+                # Se o diálogo manipulou o evento, não fazemos mais nada
+                return
+            # Se o diálogo não manipulou (pode ter sido fechado), limpamos
+            if not self.active_dialog.visible:
+                 self._close_dialog()
             return
 
         action = self.turn_controls.handle_event(event)
@@ -91,6 +108,14 @@ class Game(BaseScene):
                 return
             if self.btn_trade.handle_event(event):
                 self._open_player_dialog()
+                return
+
+        if self.card_display.handle_event(event):
+            return
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.manager.pop()
                 return
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -135,6 +160,7 @@ class Game(BaseScene):
         can_trade = self._can_trade()
         self.btn_bank.enabled = can_trade
         self.btn_trade.enabled = can_trade
+        self.card_display.enabled = not self.turn_manager.is_setup_phase
 
     def _handle_click(self, pos):
         from components.house import House
@@ -211,6 +237,7 @@ class Game(BaseScene):
         self.btn_bank.update()
         self.btn_trade.update()
         self.turn_controls.update()
+        self.card_display.update()
 
     def render(self, surface: pygame.Surface):
         surface.fill(SEA_BLUE)
@@ -221,6 +248,7 @@ class Game(BaseScene):
         self.btn_trade.render(surface)
         self.player_list.render(surface)
         self.turn_controls.render(surface)
+        self.card_display.render(surface)
 
         if self.active_dialog:
             self.active_dialog.render(surface)
@@ -228,3 +256,10 @@ class Game(BaseScene):
     def _on_settlement_placed(self, player, house):
         if player.settlements_count == 2:
             self.tabletop.distribute_initial_resources(player, house)
+
+    def _open_dev_card_dialog(self):
+        self.active_dialog = DevelopmentCardDialog(
+            self.current_player,
+            on_cancel=self._close_dialog
+        )
+        self.active_dialog.show()
