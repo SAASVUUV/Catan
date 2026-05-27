@@ -1,14 +1,16 @@
 import pygame
 from constants import *
 from .hover import Hover
+from utils.sound import SoundManager
 
 class Button:
-    def __init__(self, x, y, width, height, text, font_size=20, bg_image=None, shadow=False, enabled=True):
+    def __init__(self, x, y, width, height, text, font_size=20, bg_image=None, shadow=False, enabled=True, on_click=None):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
         self.font = pygame.font.Font(caminho_fonte, font_size)
-        self.hover = Hover(self.rect.collidepoint)
+        self.on_click = on_click
+        self.hover = Hover(self.rect.collidepoint, on_mouse_click=self._on_click)
         self.bg_color = BLUE_MEDIUM
         self.bg_hover_color = BLUE_BRIGHT
         self.bg_disabled_color = (80, 80, 90)
@@ -28,6 +30,11 @@ class Button:
                 height
             )
             self.box_shadow_color = BLACK
+
+    def _on_click(self):
+        SoundManager().play('button_press')
+        if self.on_click:
+            self.on_click()
 
     def handle_event(self, event):
         if not self.enabled:

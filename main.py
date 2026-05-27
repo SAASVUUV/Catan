@@ -10,6 +10,7 @@ def run():
     pygame.init()
     pygame.mixer.init()
     SoundManager()  # Pré-carrega os sons
+    SoundManager().play_music('soundtrack', loops=-1, volume=0.4)
     if settings.FULLSCREEN:
         screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     else:

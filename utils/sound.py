@@ -29,7 +29,13 @@ class SoundManager:
             'invalid_action': 'invalid_action.mp3',
             'construction': 'construction.mp3',
             'dice_roll': 'dice_roll.mp3',
-            'road' : 'road.mp3',
+            'button_press': 'button_press.mp3',
+            'confirm_trade': 'confirm_trade.mp3',
+            'draw_card': 'draw_card.mp3',
+            'road': 'road.mp3',
+        }
+        self._music_files = {
+            'soundtrack': os.path.join(sfx_dir, 'soundtrack.mp3')
         }
         
         for key, filename in sound_files.items():
@@ -63,3 +69,19 @@ class SoundManager:
         """Define o volume de um som (0.0 a 1.0)."""
         if sound_name in self._sounds:
             self._sounds[sound_name].set_volume(max(0.0, min(1.0, volume)))
+
+    def play_music(self, music_name: str, loops: int = -1, volume: float = 0.4):
+        """Toca música de fundo usando pygame.mixer.music."""
+        if music_name not in self._music_files:
+            print(f"Música '{music_name}' não encontrada")
+            return
+        filepath = self._music_files[music_name]
+        try:
+            pygame.mixer.music.load(filepath)
+            pygame.mixer.music.set_volume(max(0.0, min(1.0, volume)))
+            pygame.mixer.music.play(loops=loops)
+        except Exception as e:
+            print(f"Erro ao tocar música '{music_name}': {e}")
+
+    def stop_music(self):
+        pygame.mixer.music.stop()
