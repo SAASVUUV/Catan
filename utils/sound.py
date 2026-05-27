@@ -21,7 +21,7 @@ class SoundManager:
         
         self._initialized = True
         self.master_volume = 1.0
-        self.music_volume = 0.4
+        self.music_volume = 1.0
         self.sfx_volume = 1.0
         self._config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json')
 
