@@ -1,3 +1,4 @@
+import json
 import pygame
 import os
 
@@ -19,7 +20,14 @@ class SoundManager:
             return
         
         self._initialized = True
+        self.master_volume = 1.0
+        self.music_volume = 0.4
+        self.sfx_volume = 1.0
+        self._config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json')
+
+        self._load_settings()
         self._load_sounds()
+        self._apply_volumes()
     
     def _load_sounds(self):
         """Carrega todos os sons da pasta assets/sfx."""
@@ -57,6 +65,23 @@ class SoundManager:
                 print(f"Erro ao tocar som '{sound_name}': {e}")
         else:
             print(f"Som '{sound_name}' não encontrado")
+
+    def play_music(self, music_name: str, loops: int = -1, volume: float = None):
+        """Toca música de fundo usando pygame.mixer.music."""
+        if music_name not in self._music_files:
+            print(f"Música '{music_name}' não encontrada")
+            return
+        filepath = self._music_files[music_name]
+        try:
+            pygame.mixer.music.load(filepath)
+            if volume is None:
+                volume = self.master_volume * self.music_volume
+            else:
+                volume = max(0.0, min(1.0, volume))
+            pygame.mixer.music.set_volume(volume)
+            pygame.mixer.music.play(loops=loops)
+        except Exception as e:
+            print(f"Erro ao tocar música '{music_name}': {e}")
     
     def stop(self, sound_name: str = None):
         """Para um som específico ou todos."""
@@ -70,18 +95,47 @@ class SoundManager:
         if sound_name in self._sounds:
             self._sounds[sound_name].set_volume(max(0.0, min(1.0, volume)))
 
-    def play_music(self, music_name: str, loops: int = -1, volume: float = 0.4):
-        """Toca música de fundo usando pygame.mixer.music."""
-        if music_name not in self._music_files:
-            print(f"Música '{music_name}' não encontrada")
-            return
-        filepath = self._music_files[music_name]
+    def set_master_volume(self, volume: float):
+        self.master_volume = max(0.0, min(1.0, volume))
+        self._apply_volumes()
+
+    def set_music_volume(self, volume: float):
+        self.music_volume = max(0.0, min(1.0, volume))
+        self._apply_volumes()
+
+    def set_sfx_volume(self, volume: float):
+        self.sfx_volume = max(0.0, min(1.0, volume))
+        self._apply_volumes()
+
+    def _apply_volumes(self):
+        for sound in self._sounds.values():
+            sound.set_volume(self.master_volume * self.sfx_volume)
+        pygame.mixer.music.set_volume(self.master_volume * self.music_volume)
+
+    def save_settings(self):
         try:
-            pygame.mixer.music.load(filepath)
-            pygame.mixer.music.set_volume(max(0.0, min(1.0, volume)))
-            pygame.mixer.music.play(loops=loops)
+            config = {
+                'master_volume': self.master_volume,
+                'music_volume': self.music_volume,
+                'sfx_volume': self.sfx_volume,
+            }
+            with open(self._config_path, 'w', encoding='utf-8') as file:
+                json.dump(config, file, indent=4)
         except Exception as e:
-            print(f"Erro ao tocar música '{music_name}': {e}")
+            print(f"Erro ao salvar configurações de áudio: {e}")
+
+    def _load_settings(self):
+        if os.path.exists(self._config_path):
+            try:
+                with open(self._config_path, 'r', encoding='utf-8') as file:
+                    config = json.load(file)
+                self.master_volume = float(config.get('master_volume', self.master_volume))
+                self.music_volume = float(config.get('music_volume', self.music_volume))
+                self.sfx_volume = float(config.get('sfx_volume', self.sfx_volume))
+            except Exception as e:
+                print(f"Erro ao carregar configurações de áudio: {e}")
+        else:
+            self.save_settings()
 
     def stop_music(self):
         pygame.mixer.music.stop()
