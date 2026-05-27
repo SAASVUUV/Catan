@@ -41,6 +41,7 @@ class SoundManager:
             'confirm_trade': 'confirm_trade.mp3',
             'draw_card': 'draw_card.mp3',
             'road': 'road.mp3',
+            'ladrao_move': 'ladrao_move.mp3',
         }
         self._music_files = {
             'soundtrack': os.path.join(sfx_dir, 'soundtrack.mp3')
