@@ -112,6 +112,7 @@ class Game(BaseScene):
         SoundManager().play('dice_roll')
         self.turn_manager.roll_dice()
         self.tabletop.distribute_resources_for_roll(self.turn_manager.dice_sum)
+        SoundManager().play('draw_card')
         self._update_turn_state()
 
     def _do_next_phase(self):
@@ -220,7 +221,8 @@ class Game(BaseScene):
 
     def _execute_player_trade(self, offer, acceptor):
         offer.target = acceptor
-        PlayerTrade.execute(offer)
+        if PlayerTrade.execute(offer):
+            SoundManager().play('confirm_trade')
         self.pending_offer = None
         self.pending_targets = []
         self._close_dialog()
