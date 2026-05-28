@@ -1,6 +1,6 @@
 import pygame
 from .circle import Circle
-from constants import *
+from constants.colors import *
 
 class Slider:
 

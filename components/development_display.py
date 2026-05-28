@@ -1,8 +1,10 @@
 import pygame
 from typing import List, Tuple
+from typing import List, Tuple, Optional
 
-from development_cards.card_states import CardState
-from development_cards.card_types import CardType
+from components.card_states import CardState
+from components.card_types import CardType
+from components.base_card import DevelopmentCard
 from constants.colors import BEIGE_MEDIUM, BROWN_DARK, GOLD
 
 
@@ -42,9 +44,39 @@ class DevelopmentDisplay:
     def set_player(self, player):
         self.player = player
 
-    def handle_event(self, event) -> bool:
-        # No interactive actions required for HUD display; consume events when visible
-        return False
+    def handle_event(self, event):
+        """Handles user input.
+
+        Returns:
+        - a `DevelopmentCard` instance when a playable card was clicked
+        - a tuple `(None, message)` when the user clicked a blocked/locked group
+        - `None` when the event was not handled by this widget
+        """
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            pos = event.pos
+            groups = self._groups()
+            for i, (_k, _count, cards) in enumerate(groups):
+                card_x = self.x + i * (self.card_width + self.card_spacing)
+                card_y = self.y
+                rect = pygame.Rect(card_x, card_y, self.card_width, self.card_height)
+                if rect.collidepoint(pos):
+                    # Clicked on a card group. Find the first playable card.
+                    for card in cards:
+                        if card.state == CardState.READY:
+                            return card  # Return the card to be activated
+
+                    # No READY card: attempt to show a helpful reason to the user.
+                    if self.player and cards:
+                        for card in cards:
+                            try:
+                                can, reason = card.can_activate(getattr(self.player, 'played_development_card_this_turn', False))
+                                if not can and reason:
+                                    return (None, reason)
+                            except Exception:
+                                continue
+                    # Generic message
+                    return (None, "Nenhuma carta disponível para jogar")
+        return None
 
     def update(self, dt: float = 0.0):
         self.hover_index = None
@@ -82,13 +114,6 @@ class DevelopmentDisplay:
         items.sort(key=lambda x: x[1], reverse=True)
         return items[:5]
 
-    def _agg_state(self, cards: List[object]) -> CardState:
-        states = {c.state for c in cards}
-        if CardState.LOCKED in states:
-            return CardState.LOCKED
-        if CardState.READY in states:
-            return CardState.READY
-        return CardState.USED
 
     def render(self, surface: pygame.Surface):
         if not self.player:
@@ -106,8 +131,17 @@ class DevelopmentDisplay:
             )
             pygame.draw.rect(surface, BEIGE_MEDIUM, bg_rect, border_radius=8)
             pygame.draw.rect(surface, BROWN_DARK, bg_rect, width=2, border_radius=8)
-            txt = self.font.render("Nenhuma carta de desenvolvimento", True, BROWN_DARK)
-            surface.blit(txt, (self.x + 6, self.y + 6))
+            # Two-line centered message to avoid overflow
+            line1 = "Nenhuma carta de"
+            line2 = "desenvolvimento"
+            f1 = self.title_font
+            f2 = self.font
+            s1 = f1.render(line1, True, BROWN_DARK)
+            s2 = f2.render(line2, True, BROWN_DARK)
+            total_h = s1.get_height() + s2.get_height() + 6
+            start_y = bg_rect.top + (bg_rect.height - total_h) // 2
+            surface.blit(s1, (bg_rect.centerx - s1.get_width() // 2, start_y))
+            surface.blit(s2, (bg_rect.centerx - s2.get_width() // 2, start_y + s1.get_height() + 6))
             return
 
         # draw background area sized for up to 5 cards
@@ -140,26 +174,13 @@ class DevelopmentDisplay:
             pygame.draw.rect(surface, (220, 220, 220), icon_rect)
             pygame.draw.rect(surface, BROWN_DARK, icon_rect, width=1)
 
-            # State overlays
-            state = self._agg_state(cards)
-            if state == CardState.LOCKED:
-                overlay = pygame.Surface((rect.w, rect.h), flags=pygame.SRCALPHA)
-                overlay.fill((0, 0, 0, 120))
-                surface.blit(overlay, rect.topleft)
-                lock_txt = self.font.render("Bloqueada", True, (255, 200, 200))
-                surface.blit(lock_txt, (rect.x + 4, rect.y + rect.h - 20))
-            elif state == CardState.USED:
-                overlay = pygame.Surface((rect.w, rect.h), flags=pygame.SRCALPHA)
-                overlay.fill((255, 255, 255, 120))
-                surface.blit(overlay, rect.topleft)
-                used_txt = self.font.render("Usada", True, (150, 150, 150))
-                surface.blit(used_txt, (rect.x + 4, rect.y + rect.h - 20))
+            # No state overlays: HUD shows aggregated counts only
 
             # Hover highlight
             if self.hover_index == i:
                 pygame.draw.rect(surface, GOLD, rect, width=2, border_radius=6)
-                # Tooltip
-                tooltip = f"{key} ({' '.join([c.state.value for c in cards])})"
+                # Tooltip: show key and count only
+                tooltip = f"{key} ({count})"
                 tip = self.font.render(tooltip, True, (255, 255, 255))
                 tip_bg = pygame.Surface((tip.get_width() + 8, tip.get_height() + 6), flags=pygame.SRCALPHA)
                 tip_bg.fill((40, 40, 40, 220))

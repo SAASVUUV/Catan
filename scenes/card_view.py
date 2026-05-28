@@ -1,6 +1,6 @@
 import pygame
 from constants.colors import BLACK, RED
-from development_cards.card_states import CardState
+from components.card_states import CardState
 
 # Cores locais para evitar quebra de referência em constants.colors
 BROWN_DARK = (92, 64, 51)
