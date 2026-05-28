@@ -65,7 +65,7 @@ class Game(BaseScene):
         panel_width = max(200, min(panel_width, 350))
         self.player_list = PlayerListPanel(SCREEN_WIDTH - panel_width - margin, margin, panel_width, self.players, scale)
 
-        turn_ctrl_height = int(140 * scale)
+        turn_ctrl_height = int(190 * scale)
         self.turn_controls = TurnControls(SCREEN_WIDTH - panel_width - margin, SCREEN_HEIGHT - turn_ctrl_height - margin, panel_width, scale)
 
     def handle_event(self, event: pygame.event.Event):
@@ -233,6 +233,23 @@ class Game(BaseScene):
         self.btn_bank.update()
         self.btn_trade.update()
         self.turn_controls.update()
+
+        self.turn_manager.turn_time_elapsed += dt
+        time_left = max(0.0, 90.0 - self.turn_manager.turn_time_elapsed)
+
+        self.turn_controls.set_timer(time_left)
+
+        if time_left <= 0:
+            self._force_skip_turn()
+
+    def _force_skip_turn(self):
+        if self.active_dialog:
+            self._close_dialog()
+
+        SoundManager().play('invalid_action')
+
+        self.turn_manager.next_turn()
+        self._update_turn_state()
 
     def render(self, surface: pygame.Surface):
         surface.fill(SEA_BLUE)
