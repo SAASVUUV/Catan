@@ -3,7 +3,7 @@ from settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from constants.colors import BEIGE_LIGHT, BROWN_DARK, BLACK
 
 class Modal:
-    def __init__(self, width: int, height: int, title: str = ""):
+    def __init__(self, width: int, height: int, title: str = "", overlay_fullscreen: bool = True):
         self.width = width
         self.height = height
         self.title = title
@@ -16,6 +16,8 @@ class Modal:
         self.bg_color = BEIGE_LIGHT
         self.border_color = BROWN_DARK
         self.overlay_color = (0, 0, 0, 150)
+        # Controls whether the overlay darkens the full screen (including board)
+        self.overlay_fullscreen = overlay_fullscreen
 
         caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
         self.title_font = pygame.font.Font(caminho_fonte, 24)
@@ -38,9 +40,10 @@ class Modal:
         if not self.visible:
             return
 
-        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-        overlay.fill(self.overlay_color)
-        surface.blit(overlay, (0, 0))
+        if self.overlay_fullscreen:
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay.fill(self.overlay_color)
+            surface.blit(overlay, (0, 0))
 
         pygame.draw.rect(surface, self.bg_color, self.rect, border_radius=8)
         pygame.draw.rect(surface, self.border_color, self.rect, width=3, border_radius=8)

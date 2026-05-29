@@ -19,10 +19,10 @@ class Road(Buildable):
         self.house_a = None
         self.house_b = None
 
-    def _can_place_road(self, player, all_roads=None) -> bool:
+    def _can_place_road(self, player, all_roads=None, force_free: bool = False) -> bool:
         if self.owner is not None or not player.can_build_road(MAX_ROADS):
             return False
-        if not player.is_in_setup_phase() and not player.has_resources_for_road():
+        if not player.is_in_setup_phase() and not force_free and not player.has_resources_for_road():
             return False
         # RN25: Estradas devem ser adjacentes a outras estruturas do mesmo jogador (exceto na fase de setup)
         if not player.is_in_setup_phase() and all_roads is not None:
@@ -54,8 +54,8 @@ class Road(Buildable):
         
         return False
 
-    def try_build(self, player, all_roads=None) -> bool:
-        if not self._can_place_road(player, all_roads):
+    def try_build(self, player, all_roads=None, force_free: bool = False) -> bool:
+        if not self._can_place_road(player, all_roads, force_free=force_free):
             self._invalid_timer = 0.4
             SoundManager().play('invalid_action')
             return False
@@ -63,10 +63,18 @@ class Road(Buildable):
         if player.is_in_setup_phase():
             player.add_road()
         else:
-            if not player.buy_road(MAX_ROADS):
-                self._invalid_timer = 0.4
-                SoundManager().play('invalid_action')
-                return False
+            if force_free:
+                if not player.can_build_road(MAX_ROADS):
+                    self._invalid_timer = 0.4
+                    SoundManager().play('invalid_action')
+                    return False
+                # place road without consuming resources
+                player.add_road()
+            else:
+                if not player.buy_road(MAX_ROADS):
+                    self._invalid_timer = 0.4
+                    SoundManager().play('invalid_action')
+                    return False
 
         self.owner = player
         self.color = player.color
