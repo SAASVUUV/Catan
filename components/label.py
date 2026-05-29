@@ -1,5 +1,5 @@
 import pygame
-from constants import BLACK
+from constants.colors import BLACK
 
 class Label:
 

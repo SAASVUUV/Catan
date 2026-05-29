@@ -1,5 +1,5 @@
 import pygame
-from constants import *
+from constants.colors import *
 from .hover import Hover
 from utils.sound import SoundManager
 
