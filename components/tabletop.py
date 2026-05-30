@@ -75,8 +75,9 @@ class Tabletop:
 
         self.robber_sprite = loader.get_sprite(
             "bandit",
-            target_size=(int(hex_radius * 0.75), int(hex_radius * 0.75))
+            target_size=(int(hex_radius * 0.4), int(hex_radius * 0.4))
         )
+        self.robber_offset_y = int(hex_radius * 0.35)
 
         for row in self.tiles_matrix:
             for tile in row:
@@ -222,7 +223,7 @@ class Tabletop:
 
         if self.robber_tile:
             if getattr(self, "robber_sprite", None):
-                rect = self.robber_sprite.get_rect(center=(int(self.robber_tile.x), int(self.robber_tile.y)))
+                rect = self.robber_sprite.get_rect(center=(int(self.robber_tile.x), int(self.robber_tile.y + self.robber_offset_y)))
                 surface.blit(self.robber_sprite, rect.topleft)
             else:
                 pygame.draw.circle(surface, (35, 35, 35), (int(self.robber_tile.x), int(self.robber_tile.y)), 18)
