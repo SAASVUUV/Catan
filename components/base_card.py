@@ -30,7 +30,10 @@ class DevelopmentCard:
         self.name: str = name
         self.description: str = description
         self.type: Optional[CardType] = card_type
-        self.state: CardState = CardState.LOCKED
+        if (card_type in [CardType.VICTORY_POINT, CardType.UNIVERSITY, CardType.MARKET, CardType.PALACE, CardType.CHAPEL, CardType.LIBRARY]):
+            self.state: CardState = CardState.READY
+        else:
+            self.state: CardState = CardState.LOCKED
         self.owner = owner
         self.purchase_turn: Optional[int] = purchase_turn
         # Flag to indicate card was bought in the current turn
@@ -44,10 +47,10 @@ class DevelopmentCard:
         - USED cards cannot be activated.
         - Only one development card (except Victory Point) can be played per turn.
         """
-        if self.state == CardState.LOCKED or self.bought_this_turn:
-            return False, "Carta não está pronta (comprada neste turno)"
         if self.state == CardState.USED:
             return False, "Carta já foi utilizada"
+        if self.state == CardState.LOCKED or self.bought_this_turn:
+            return False, "Carta não está pronta (comprada neste turno)"
         if has_played_card_this_turn and self.type != CardType.VICTORY_POINT:
             return False, "Já jogou uma carta de desenvolvimento neste turno"
         return True, ""
@@ -80,8 +83,9 @@ BaseCard = DevelopmentCard
 
 
 class KnightCard(DevelopmentCard):
+    card_type = CardType.KNIGHT
     def __init__(self, **kwargs):
-        super().__init__(name="Knight", card_type=CardType.KNIGHT, **kwargs)
+        super().__init__(name="Cavaleiro", card_type=self.card_type, **kwargs)
 
     def activate(self, turn_manager=None, **kwargs):
         # Placeholder for robber-move effect
@@ -89,8 +93,10 @@ class KnightCard(DevelopmentCard):
 
 
 class ProgressCard(DevelopmentCard):
-    def __init__(self, name: str, **kwargs):
-        super().__init__(name=name, card_type=CardType.PROGRESS, **kwargs)
+    card_type = CardType.PROGRESS
+    def __init__(self, name: str, card_type: Optional[CardType] = None, **kwargs):
+        # Passa o card_type recebido para a classe base, em vez de usar o seu próprio.
+        super().__init__(name=name, card_type=card_type, **kwargs)
 
     def activate(self, turn_manager=None, **kwargs):
         # Placeholder for specific progress effect
@@ -98,8 +104,9 @@ class ProgressCard(DevelopmentCard):
 
 
 class RoadBuildingCard(ProgressCard):
+    card_type = CardType.ROAD_BUILDING
     def __init__(self, **kwargs):
-        super().__init__(name="Road Building", **kwargs)
+        super().__init__(name="Construção de Estradas", card_type=self.card_type, **kwargs)
 
     def activate(self, turn_manager=None, players=None, tabletop=None, edges=None, **kwargs):
         """Place two roads on the board without consuming resources.
@@ -129,10 +136,10 @@ class RoadBuildingCard(ProgressCard):
 
         return True
 
-
 class YearOfPlentyCard(ProgressCard):
+    card_type = CardType.YEAR_OF_PLENTY
     def __init__(self, **kwargs):
-        super().__init__(name="Year of Plenty", **kwargs)
+        super().__init__(name="Ano de Fartura", card_type=self.card_type, **kwargs)
 
     def activate(self, turn_manager=None, players=None, resources=None, bank=None, **kwargs):
         """Give the owner two resources chosen by the player.
@@ -163,10 +170,10 @@ class YearOfPlentyCard(ProgressCard):
 
         return True
 
-
 class MonopolyCard(ProgressCard):
+    card_type = CardType.MONOPOLY
     def __init__(self, **kwargs):
-        super().__init__(name="Monopoly", **kwargs)
+        super().__init__(name="Monopólio", card_type=self.card_type, **kwargs)
 
     def activate(self, turn_manager=None, players=None, resource=None, **kwargs):
         """Take all of `resource` from other players and give to owner.
@@ -192,12 +199,42 @@ class MonopolyCard(ProgressCard):
 
         return True
 
-
 class VictoryPointCard(DevelopmentCard):
-    def __init__(self, **kwargs):
-        super().__init__(name="Victory Point", card_type=CardType.VICTORY_POINT, **kwargs)
+    def __init__(self, name: str = "Ponto de Vitória", card_type: Optional[CardType] = None, **kwargs):
+        super().__init__(name=name, card_type=card_type or CardType.VICTORY_POINT, **kwargs)
 
-    def activate(self, turn_manager=None, **kwargs):
-        # Revealing victory point should update player's visible score;
-        # leave effect implementation for game logic; just move state.
-        return super().activate(turn_manager=turn_manager, **kwargs)
+    def can_activate(self, has_played_card_this_turn: bool = False):
+        return False, "Cartas de ponto de vitória são reveladas apenas ao final do jogo"
+
+    def activate(self, turn_manager=None, player=None, **kwargs):
+        return False
+
+
+class UniversityCard(VictoryPointCard):
+    card_type = CardType.UNIVERSITY
+    def __init__(self, **kwargs):
+        super().__init__(name="Universidade", card_type=self.card_type, **kwargs)
+
+
+class MarketCard(VictoryPointCard):
+    card_type = CardType.MARKET
+    def __init__(self, **kwargs):
+        super().__init__(name="Mercado", card_type=self.card_type, **kwargs)
+
+
+class PalaceCard(VictoryPointCard):
+    card_type = CardType.PALACE
+    def __init__(self, **kwargs):
+        super().__init__(name="Palácio", card_type=self.card_type, **kwargs)
+
+
+class ChapelCard(VictoryPointCard):
+    card_type = CardType.CHAPEL
+    def __init__(self, **kwargs):
+        super().__init__(name="Capela", card_type=self.card_type, **kwargs)
+
+
+class LibraryCard(VictoryPointCard):
+    card_type = CardType.LIBRARY
+    def __init__(self, **kwargs):
+        super().__init__(name="Biblioteca", card_type=self.card_type, **kwargs)

@@ -7,6 +7,7 @@ class Button:
     def __init__(self, x, y, width, height, text, font_size=20, bg_image=None, shadow=False, enabled=True, on_click=None):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
+        self.on_click = on_click
         caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
         self.font = pygame.font.Font(caminho_fonte, font_size)
         self.on_click = on_click
@@ -39,7 +40,12 @@ class Button:
     def handle_event(self, event):
         if not self.enabled:
             return False
-        return self.hover.handle_event(event)
+        
+        if self.hover.handle_event(event):
+            if self.on_click:
+                self.on_click()
+            return True
+        return False
 
     def update(self):
         if self.enabled:

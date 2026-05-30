@@ -1,0 +1,5 @@
+KNIGHT = "knight"
+MONOPOLY = "monopoly"
+YEAR_OF_PLENTY = "year_of_plenty"
+ROAD_BUILDING = "road_building"
+VICTORY_POINT = "victory_point"

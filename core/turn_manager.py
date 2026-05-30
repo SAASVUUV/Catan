@@ -1,10 +1,15 @@
 import random
 from constants.phases import TurnPhase
+from constants.deck import DEVELOPMENT_CARDS
+from constants.development_cards import VICTORY_POINT
+from constants.types import ROCK, WHEAT, LAMB
 
 
 class TurnManager:
     def __init__(self, players):
         self.players = players
+        self.development_cards = list(DEVELOPMENT_CARDS)
+        random.shuffle(self.development_cards)
         self.is_setup_phase = True
         self.setup_order = list(range(len(players))) + list(range(len(players)-1, -1, -1))
         self.setup_index = 0
@@ -71,3 +76,29 @@ class TurnManager:
             self.normal_turn_index = (self.normal_turn_index + 1) % len(self.players)
             self.current_phase = TurnPhase.DICE
             self.last_dice_roll = None
+
+    def buy_development_card(self):
+        """RN11, RN20: O jogador pode comprar uma carta de desenvolvimento."""
+        player = self.current_player
+        if player.inventory.has(ROCK, 1) and player.inventory.has(WHEAT, 1) and player.inventory.has(LAMB, 1):
+            if self.development_cards:
+                player.inventory.remove(ROCK, 1)
+                player.inventory.remove(WHEAT, 1)
+                player.inventory.remove(LAMB, 1)
+
+                card = self.development_cards.pop(0)
+                if card == VICTORY_POINT:
+                    vp_card = self.victory_points_deck.pop(0)
+                    player.victory_point_cards.append(vp_card)
+                else:
+                    player.development_cards.append(card)
+                
+                return True
+        return False
+
+    def check_victory(self):
+        """RN6: Verifica se algum jogador atingiu 10 ou mais pontos de vitória."""
+        for player in self.players:
+            if player.victory_points >= 10:
+                return player
+        return None

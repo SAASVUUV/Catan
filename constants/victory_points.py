@@ -1,0 +1,5 @@
+CHAPEL = "chapel"
+LIBRARY = "library"
+MARKET = "market"
+PALACE = "palace"
+UNIVERSITY = "university"
