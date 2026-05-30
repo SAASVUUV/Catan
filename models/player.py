@@ -23,17 +23,37 @@ class Player:
         # Flag to prevent playing more than one development card per turn
         self.played_development_card_this_turn = False
 
+        # Conquistas especiais
+        self.has_longest_road = False
+        self.has_largest_army = False
+        self.knights_played = 0
+
+    @property
+    def played_knights_count(self):
+        """Retorna o número de cartas de cavaleiro jogadas."""
+        return self.knights_played
+
     @property
     def victory_points(self):
-        """RN6, RN8: Calcula o total de pontos de vitória do jogador (incluindo cartas VP)."""
+        """RN6, RN8: Calcula o total de pontos de vitória do jogador (incluindo cartas VP e bônus)."""
         from components.base_card import VictoryPointCard
         vp_from_cards = sum(1 for c in self.development_cards if isinstance(c, VictoryPointCard))
-        return self.settlements_count + (self.cities_count * 2) + vp_from_cards
+        bonus = 0
+        if self.has_longest_road:
+            bonus += 2
+        if self.has_largest_army:
+            bonus += 2
+        return self.settlements_count + (self.cities_count * 2) + vp_from_cards + bonus
 
     @property
     def visible_victory_points(self):
-        """Pontos de vitória visíveis (apenas construções, sem cartas secretas)."""
-        return self.settlements_count + (self.cities_count * 2)
+        """Pontos de vitória visíveis (construções + bônus de conquistas)."""
+        bonus = 0
+        if self.has_longest_road:
+            bonus += 2
+        if self.has_largest_army:
+            bonus += 2
+        return self.settlements_count + (self.cities_count * 2) + bonus
 
     # --- VERIFICAÇÃO DE FASE DO JOGO ---
     def is_in_setup_phase(self) -> bool:

@@ -48,5 +48,15 @@ class PlayerListPanel:
             text_y = row_center_y - name_text.get_height() // 2
             surface.blit(name_text, (text_x, text_y))
 
-            score_text = self.font.render(str(player.visible_victory_points), True, BLACK)
+            badges = ""
+            if player.has_longest_road:
+                badges += "E"
+            if player.has_largest_army:
+                badges += "A"
+
+            score_str = str(player.visible_victory_points)
+            if badges:
+                score_str = f"[{badges}] {score_str}"
+
+            score_text = self.font.render(score_str, True, BLACK)
             surface.blit(score_text, (self.x + self.width - score_text.get_width() - self.padding, text_y))

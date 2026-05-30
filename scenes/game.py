@@ -12,6 +12,7 @@ from components.player_list_panel import PlayerListPanel
 from components.turn_controls import TurnControls
 from core.trade import BankTrade, PlayerTrade
 from systems.card_manager import CardManager
+from systems.achievements import AchievementsManager
 from ui.toast import ToastManager
 from constants.types import ROCK, LAMB, WHEAT, TREE, BRICK
 from components.base_card import (
@@ -49,6 +50,7 @@ class Game(BaseScene):
 
         self.turn_manager = TurnManager(self.players)
         self.card_manager = CardManager(self.players)
+        self.achievements_manager = AchievementsManager(self.players)
         self.turn_manager.shuffle_player_order()
 
         hex_radius = int(SCREEN_HEIGHT * 0.085)
@@ -93,8 +95,8 @@ class Game(BaseScene):
         self.btn_buy_card = Button(btn_x, btn_y + btn_h + btn_gap, btn_w, btn_h, "Comprar Carta", font_size=btn_font)
 
 
-        panel_width = int(240 * scale)
-        panel_width = max(200, min(panel_width, 350))
+        panel_width = int(290 * scale)
+        panel_width = max(250, min(panel_width, 400))
         self.player_list = PlayerListPanel(SCREEN_WIDTH - panel_width - margin, margin, panel_width, self.players, scale)
 
         turn_ctrl_height = int(190 * scale)
@@ -442,6 +444,8 @@ class Game(BaseScene):
                         self.turn_manager.setup_record_road()
                     if self.turn_manager.setup_turn_complete():
                         self.turn_manager.next_turn()
+                if isinstance(target, Road):
+                    self.achievements_manager.update_longest_road(self.tabletop.roads)
                 self._update_turn_state()
 
     # ---------- Todo o código de Dialogs da development foi mantido ----------
@@ -498,6 +502,8 @@ class Game(BaseScene):
 
         if isinstance(card, KnightCard):
             self.card_manager.attempt_activate_card(owner, card)
+            owner.knights_played += 1
+            self.achievements_manager.update_largest_army()
             self._begin_robber_tile_selection()
             self.toast_manager.show("Escolha um terreno para mover o ladrão")
             return
@@ -581,6 +587,7 @@ class Game(BaseScene):
         if success:
             self.toast_manager.show("Estradas construídas")
             SoundManager().play('road')
+            self.achievements_manager.update_longest_road(self.tabletop.roads)
         else:
             self.toast_manager.show("Falha ao construir estradas")
         self._close_dialog()
