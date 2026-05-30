@@ -21,8 +21,9 @@ class Tabletop:
         self.tiles = set()
 
         # RN03 e RN23: Ladrilhos e numerações do jogo base
-        numbers = [2, 3, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
+        numbers = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
         types = [WHEAT, LAMB, TREE] * 4 + [ROCK, BRICK] * 3 + [DESERT]
+        self.robber_tile = None
 
         # --- PARÂMETROS DE CALIBRAGEM DA BORDA ---
         # Se a moldura parecer pequena/grande, ajuste estes multiplicadores:
@@ -54,8 +55,8 @@ class Tabletop:
             for j in range(len(self.tiles_matrix[i])):
                 if self.tiles_matrix[i][j]:
                     x = x0 + j * dx
-                    number = takesome(numbers)
                     type_ = takesome(types)
+                    number = None if type_ == DESERT else takesome(numbers)
                     self.tiles_matrix[i][j] = HexagonTile(
                         number,
                         type_,
@@ -66,9 +67,17 @@ class Tabletop:
                         i,
                         self.tiles_matrix
                     )
+                    if type_ == DESERT:
+                        self.robber_tile = self.tiles_matrix[i][j]
                     self.tiles.add(self.tiles_matrix[i][j])
                 else:
                     self.tiles_matrix[i][j] = None
+
+        self.robber_sprite = loader.get_sprite(
+            "bandit",
+            target_size=(int(hex_radius * 0.4), int(hex_radius * 0.4))
+        )
+        self.robber_offset_y = int(hex_radius * 0.35)
 
         for row in self.tiles_matrix:
             for tile in row:
@@ -152,6 +161,18 @@ class Tabletop:
                 return road
         return None
 
+    def get_tile_at(self, pos):
+        for tile in self.tiles:
+            if tile and tile.hexagon.collidepoint(pos):
+                return tile
+        return None
+
+    def move_robber(self, tile) -> bool:
+        if tile is None or tile is self.robber_tile:
+            return False
+        self.robber_tile = tile
+        return True
+
     def get_adjacent_tiles(self, house):
         adjacent = []
         for tile in self.tiles:
@@ -170,6 +191,8 @@ class Tabletop:
     def distribute_resources_for_roll(self, dice_sum):
         from constants.types import DESERT
         for tile in self.tiles:
+            if tile is self.robber_tile:
+                continue
             if tile.number == dice_sum and tile.terrain_type != DESERT:
                 for house in tile.extract_houses():
                     if house and house.owner and house.level > 0:
@@ -197,6 +220,13 @@ class Tabletop:
         # 2. Renderiza os terrenos e numerações
         for tile in self.tiles:
             tile.render(surface)
+
+        if self.robber_tile:
+            if getattr(self, "robber_sprite", None):
+                rect = self.robber_sprite.get_rect(center=(int(self.robber_tile.x), int(self.robber_tile.y + self.robber_offset_y)))
+                surface.blit(self.robber_sprite, rect.topleft)
+            else:
+                pygame.draw.circle(surface, (35, 35, 35), (int(self.robber_tile.x), int(self.robber_tile.y)), 18)
 
         # 3. Renderiza as docas portuárias
         for port in self.ports:

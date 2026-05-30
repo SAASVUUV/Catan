@@ -1,6 +1,6 @@
 import pygame
 from .circle import Circle
-from constants import *
+from constants.colors import *
 
 class Slider:
 
@@ -15,12 +15,19 @@ class Slider:
         self.mouse_in = False
         self.click = False
         self.circle = Circle(
-            x,
+            x + w,
             y + h/2,
             self.h * 2,
             BLUE_BRIGHT,
         )
-        self.percent = 0
+        self.percent = 1.0
+
+    def set_value(self, percent: float):
+        self.percent = max(0.0, min(1.0, percent))
+        self.circle.x = self.x + self.percent * self.w
+
+    def get_value(self) -> float:
+        return self.percent
 
     def cursor_hover(self): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
     def cursor_default(self): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)

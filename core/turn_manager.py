@@ -20,6 +20,7 @@ class TurnManager:
         self.normal_turn_index = 0
         self.current_phase = TurnPhase.CONSTRUCTION
         self.last_dice_roll = None
+        self.turn_time_elapsed = 0.0
 
     def setup_record_house(self):
         self.setup_built_house = True
@@ -63,6 +64,8 @@ class TurnManager:
             self.next_turn()
 
     def next_turn(self):
+        self.turn_time_elapsed = 0.0
+        
         if self.is_setup_phase:
             self._reset_setup_turn()
             self.setup_index += 1
