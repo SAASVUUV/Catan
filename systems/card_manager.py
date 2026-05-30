@@ -14,9 +14,14 @@ from components.base_card import (
     RoadBuildingCard,
     YearOfPlentyCard,
     MonopolyCard,
-    VictoryPointCard,
+    UniversityCard,
+    MarketCard,
+    PalaceCard,
+    ChapelCard,
+    LibraryCard,
 )
 from components.card_states import CardState
+from constants.deck import DEVELOPMENT_CARDS
 
 
 class CardManager:
@@ -47,15 +52,25 @@ class CardManager:
         # The purchased card is added in LOCKED/bought_this_turn state via
         # `Player.add_development_card` (keeps the rule that it cannot be
         # used the same turn it was bought).
-        card_cls = random.choice([
-            KnightCard,
-            RoadBuildingCard,
-            YearOfPlentyCard,
-            MonopolyCard,
-            VictoryPointCard,
-        ])
+        print(f"Player {player.name} is buying a card... Available cards: {DEVELOPMENT_CARDS}")
+        
+        if not DEVELOPMENT_CARDS:
+            print("No development cards left to buy!")
+            return False
+        card_cls = random.choice(
+            [KnightCard] * DEVELOPMENT_CARDS.count("knight")+
+            [RoadBuildingCard] * DEVELOPMENT_CARDS.count("road_building")+
+            [YearOfPlentyCard] * DEVELOPMENT_CARDS.count("year_of_plenty")+
+            [MonopolyCard] * DEVELOPMENT_CARDS.count("monopoly")+
+            [UniversityCard] * DEVELOPMENT_CARDS.count("university")+
+            [MarketCard] * DEVELOPMENT_CARDS.count("market")+
+            [PalaceCard] * DEVELOPMENT_CARDS.count("palace")+
+            [ChapelCard] * DEVELOPMENT_CARDS.count("chapel")+
+            [LibraryCard] * DEVELOPMENT_CARDS.count("library")
+        )
         card = card_cls()
         player.add_development_card(card)
+        DEVELOPMENT_CARDS.remove(card_cls.card_type.value)  # Remove one instance of this card type from the deck
         return True
 
     def on_turn_start(self, player):
