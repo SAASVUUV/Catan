@@ -1,3 +1,4 @@
+import random
 import pygame
 from .base_scene import BaseScene
 from models.player import Player
@@ -30,6 +31,7 @@ from models.bank import Bank
 from components.year_of_plenty_dialog import YearOfPlentyDialog
 from components.monopoly_dialog import MonopolyDialog
 from components.road_building_dialog import RoadBuildingDialog
+from components.robber_dialogs import DiscardResourcesDialog, RobberStealDialog, RESOURCE_NAMES
 
 
 class Game(BaseScene):
@@ -53,6 +55,9 @@ class Game(BaseScene):
         self._setup_ui()
         self.toast_manager = ToastManager()
         self.active_dialog = None
+        self.awaiting_robber_tile = False
+        self._discard_queue = []
+        self._discarding_player = None
         # bank for Year of Plenty and other interactions
         self.bank = Bank()
         self.pending_offer = None
@@ -102,6 +107,12 @@ class Game(BaseScene):
     def handle_event(self, event: pygame.event.Event):
         if self.active_dialog:
             self.active_dialog.handle_event(event)
+            return
+
+        if self.awaiting_robber_tile:
+            self.tabletop.handle_event(event)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                self._handle_robber_tile_click(event.pos)
             return
 
         # Debug hotkey: press D to give current player resources (useful for testing)
@@ -195,8 +206,117 @@ class Game(BaseScene):
     def _do_dice_roll(self):
         SoundManager().play('dice_roll')
         self.turn_manager.roll_dice()
+        self._update_turn_state()
+
+        if self.turn_manager.dice_sum == 7:
+            self._start_seven_robber_flow()
+            return
+
         self.tabletop.distribute_resources_for_roll(self.turn_manager.dice_sum)
         SoundManager().play('draw_card')
+        self._update_turn_state()
+
+    def _start_seven_robber_flow(self):
+        self.toast_manager.show("Saiu 7: o ladrao deve ser movido")
+        self._discard_queue = [
+            (player, player.inventory.total() // 2)
+            for player in self.players
+            if player.inventory.total() > 7
+        ]
+        self._open_next_discard_dialog()
+
+    def _open_next_discard_dialog(self):
+        if not self._discard_queue:
+            self._discarding_player = None
+            self._begin_robber_tile_selection()
+            return
+
+        player, discard_count = self._discard_queue.pop(0)
+        self._discarding_player = player
+        self.active_dialog = DiscardResourcesDialog(player, discard_count, on_confirm=self._confirm_discard)
+        self.active_dialog.show()
+
+    def _confirm_discard(self, selection):
+        player = self._discarding_player
+        if player is None:
+            return
+
+        for resource, count in selection.items():
+            player.inventory.remove(resource, count)
+
+        self.active_dialog = None
+        self.toast_manager.show(f"{player.name} descartou {sum(selection.values())} recurso(s)")
+        self._update_turn_state()
+        self._open_next_discard_dialog()
+
+    def _begin_robber_tile_selection(self):
+        self.awaiting_robber_tile = True
+        self.toast_manager.show("Escolha outro terreno para mover o ladrao")
+
+    def _handle_robber_tile_click(self, pos):
+        tile = self.tabletop.get_tile_at(pos)
+        if tile is None:
+            return
+        if tile is self.tabletop.robber_tile:
+            self.toast_manager.show("O ladrao precisa ir para outro terreno")
+            return
+
+        if not self.tabletop.move_robber(tile):
+            return
+
+        self.awaiting_robber_tile = False
+        SoundManager().play('ladrao_move')
+        self._finish_robber_move(tile)
+
+    def _finish_robber_move(self, tile):
+        candidates = self._robber_steal_candidates(tile)
+        if not candidates:
+            self.toast_manager.show("Ladrao movido. Nao ha jogador adjacente para roubar")
+            self._update_turn_state()
+            return
+
+        self.active_dialog = RobberStealDialog(
+            candidates,
+            on_select=self._steal_random_resource,
+            on_skip=self._skip_robber_steal
+        )
+        self.active_dialog.show()
+
+    def _robber_steal_candidates(self, tile):
+        candidates = []
+        for house in tile.extract_houses():
+            if not house or not house.owner or house.level <= 0:
+                continue
+            owner = house.owner
+            if owner is self.current_player or owner.inventory.total() <= 0:
+                continue
+            if owner not in candidates:
+                candidates.append(owner)
+
+        return [player for player in self.players if player in candidates]
+
+    def _steal_random_resource(self, victim):
+        resource_pool = []
+        for resource, count in victim.inventory.cards.items():
+            resource_pool.extend([resource] * count)
+
+        if not resource_pool:
+            self.toast_manager.show(f"{victim.name} nao tem recursos para roubar")
+            self._skip_robber_steal()
+            return
+
+        resource = random.choice(resource_pool)
+        victim.inventory.remove(resource, 1)
+        self.current_player.inventory.add(resource, 1)
+        self.active_dialog = None
+        resource_name = RESOURCE_NAMES.get(resource, "recurso")
+        self.toast_manager.show(f"{self.current_player.name} roubou {resource_name} de {victim.name}")
+        SoundManager().play('draw_card')
+        self._update_turn_state()
+
+    def _skip_robber_steal(self):
+        self.active_dialog = None
+        self.toast_manager.show("Ladrao movido")
         self._update_turn_state()
 
     def _do_next_phase(self):
@@ -425,6 +545,8 @@ class Game(BaseScene):
 
     def update(self, dt: float):
         self.tabletop.update(dt)
+        if self.active_dialog:
+            self.active_dialog.update(dt)
         # Update both displays so hover and internal state stay in sync
         try:
             self.resource_display.update(dt)
