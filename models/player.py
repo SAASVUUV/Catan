@@ -1,6 +1,7 @@
 import pygame
 from constants.types import ROCK, TREE, LAMB, BRICK, WHEAT
 from models.inventory import Inventory
+from components.card_states import CardState
 
 
 class Player:
@@ -20,6 +21,10 @@ class Player:
 
         # Inventário de matérias-primas
         self.inventory = Inventory()
+        # Development cards owned by the player
+        self.development_cards = []
+        # Flag to prevent playing more than one development card per turn
+        self.played_development_card_this_turn = False
 
     @property
     def victory_points(self):
@@ -94,3 +99,15 @@ class Player:
             self.upgrade_to_city()
             return True
         return False
+
+    # --- Development cards management ---
+    def add_development_card(self, card, purchase_turn: int = None):
+        """Attach a development card to this player.
+
+        Sets ownership and marks the card as bought this turn (LOCKED).
+        """
+        card.owner = self
+        card.purchase_turn = purchase_turn
+        card.bought_this_turn = True
+        card.state = CardState.LOCKED
+        self.development_cards.append(card)
