@@ -99,5 +99,8 @@ class TurnManager:
         return False
 
     def check_victory(self):
-        """RN6: Verifica se o jogador atual atingiu 10 ou mais pontos de vitória."""
-        return self.current_player.victory_points >= 10
+        """RN6: Verifica se algum jogador atingiu 10 ou mais pontos de vitória."""
+        for player in self.players:
+            if player.victory_points >= 10:
+                return player
+        return None

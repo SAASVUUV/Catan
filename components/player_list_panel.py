@@ -48,5 +48,5 @@ class PlayerListPanel:
             text_y = row_center_y - name_text.get_height() // 2
             surface.blit(name_text, (text_x, text_y))
 
-            score_text = self.font.render(str(player.victory_points), True, BLACK)
+            score_text = self.font.render(str(player.visible_victory_points), True, BLACK)
             surface.blit(score_text, (self.x + self.width - score_text.get_width() - self.padding, text_y))

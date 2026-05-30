@@ -28,8 +28,15 @@ class Player:
 
     @property
     def victory_points(self):
-        """RN6, RN8: Calcula o total de pontos de vitória do jogador."""
-        return self.settlements_count + (self.cities_count * 2) + len(self.victory_point_cards)
+        """RN6, RN8: Calcula o total de pontos de vitória do jogador (incluindo cartas secretas)."""
+        from components.base_card import VictoryPointCard
+        vp_from_dev_cards = sum(1 for c in self.development_cards if isinstance(c, VictoryPointCard))
+        return self.settlements_count + (self.cities_count * 2) + len(self.victory_point_cards) + vp_from_dev_cards
+
+    @property
+    def visible_victory_points(self):
+        """Pontos de vitória visíveis (apenas construções, sem cartas secretas)."""
+        return self.settlements_count + (self.cities_count * 2)
 
     # --- VERIFICAÇÃO DE FASE DO JOGO ---
     def is_in_setup_phase(self) -> bool:

@@ -6,7 +6,6 @@ from core.turn_manager import TurnManager
 from components.tabletop import Tabletop
 from components.button import Button
 from components.resource_display import ResourceDisplay
-from components.development_display import DevelopmentDisplay
 from components.bank_trade_dialog import BankTradeDialog
 from components.player_trade_dialog import PlayerTradeDialog, TradeOfferDialog
 from components.player_list_panel import PlayerListPanel
@@ -86,10 +85,6 @@ class Game(BaseScene):
         self.resource_display = ResourceDisplay(SCREEN_WIDTH * 0.2, SCREEN_HEIGHT - bottom_margin, scale)
         self.resource_display.set_player(self.current_player)
 
-        # Development HUD (hidden by default) and toggle button
-        self.development_display = DevelopmentDisplay(self.resource_display.x, self.resource_display.y, scale)
-        self.show_development_cards = False
-
         btn_w = int(88 * scale)
         btn_h = int(33 * scale)
         btn_font = int(15 * scale)
@@ -98,11 +93,7 @@ class Game(BaseScene):
         btn_gap = int(10 * scale)
         self.btn_bank = Button(btn_x, btn_y, btn_w, btn_h, "Banco", font_size=btn_font)
         self.btn_trade = Button(btn_x + btn_w + btn_gap, btn_y, btn_w, btn_h, "Trocar", font_size=btn_font)
-        # Toggle button replaces the old "Ver Cartas" button
-        dev_btn_w = btn_w
-        # use same width as other buttons to avoid overlap
-        self.btn_dev_cards = Button(btn_x, btn_y + btn_h + btn_gap, dev_btn_w, btn_h, "Desenv.", font_size=btn_font)
-        self.btn_buy_card = Button(btn_x + btn_w + btn_gap, btn_y + btn_h + btn_gap, btn_w, btn_h, "Comprar Carta", font_size=btn_font)
+        self.btn_buy_card = Button(btn_x, btn_y + btn_h + btn_gap, btn_w, btn_h, "Comprar Carta", font_size=btn_font)
 
 
         panel_width = int(240 * scale)
@@ -112,7 +103,7 @@ class Game(BaseScene):
         turn_ctrl_height = int(190 * scale)
         self.turn_controls = TurnControls(SCREEN_WIDTH - panel_width - margin, SCREEN_HEIGHT - turn_ctrl_height - margin, panel_width, scale)
 
-        card_display_x = int(SCREEN_WIDTH * 0.55)
+        card_display_x = int(SCREEN_WIDTH * 0.65)
         card_display_y = SCREEN_HEIGHT - bottom_margin - 10
         self.card_display = DevelopmentCardDisplay(card_display_x, card_display_y, scale, on_click=self._open_dev_card_dialog)
 
@@ -142,27 +133,6 @@ class Game(BaseScene):
             self._update_turn_state()
             return
 
-        # legacy hand/dropdown removed: HUD is the single source-of-truth
-
-        # If the development HUD is visible, allow clicking cards
-        if getattr(self, "show_development_cards", False):
-            res = self.development_display.handle_event(event)
-            card = None
-            msg = None
-            if isinstance(res, tuple):
-                card, msg = res
-            else:
-                card = res
-
-            if card:
-                # start play flow for this development card
-                self._play_development_card(card)
-                return
-            if msg:
-                # show a toast at the top of the screen explaining why
-                self.toast_manager.show(msg)
-                return
-
         action = self.turn_controls.handle_event(event)
         if action == 'roll':
             self._do_dice_roll()
@@ -187,27 +157,13 @@ class Game(BaseScene):
         if self.card_display.handle_event(event):
             return
 
-        if self._can_build() or self._can_trade():
-            if self.btn_dev_cards.handle_event(event):
-                # Toggle between resource HUD and development HUD
-                self.show_development_cards = not getattr(self, "show_development_cards", False)
-                if self.show_development_cards:
-                    self.development_display.set_player(self.current_player)
-                else:
-                    self.resource_display.set_player(self.current_player)
+        if self._can_build() and not self.turn_manager.is_setup_phase and self.btn_buy_card.handle_event(event):
+            success = self.card_manager.attempt_buy_card(self.current_player)
+            if success:
+                SoundManager().play('construction')
+                self.toast_manager.show("Carta comprada")
                 self._update_turn_state()
-                return
-            # Buying development cards is only allowed outside setup phase
-            if self._can_build() and not self.turn_manager.is_setup_phase and self.btn_buy_card.handle_event(event):
-                success = self.card_manager.attempt_buy_card(self.current_player)
-                if success:
-                    SoundManager().play('construction')
-                    # Ensure the development HUD references the current player so
-                    # the newly purchased (LOCKED) card is reflected immediately
-                    self.development_display.set_player(self.current_player)
-                    self.toast_manager.show("Carta comprada")
-                    self._update_turn_state()
-                return
+            return
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
@@ -372,17 +328,61 @@ class Game(BaseScene):
         self.btn_bank.enabled = can_trade
         self.btn_trade.enabled = can_trade
         self.card_display.enabled = not self.turn_manager.is_setup_phase
-        self.btn_dev_cards.enabled = can_trade or self._can_build()
-        # Buying development cards is disabled during setup phase
         self.btn_buy_card.enabled = self._can_build() and not self.turn_manager.is_setup_phase
-        # Update toggle button text (repurposed `btn_dev_cards`)
-        if getattr(self, "show_development_cards", False):
-            # shorter label shown when HUD is in development mode
-            self.btn_dev_cards.text = "Recursos"
-            self.development_display.set_player(self.current_player)
-        else:
-            self.btn_dev_cards.text = "Desenv."
-            self.resource_display.set_player(self.current_player)
+
+        winner = self.turn_manager.check_victory()
+        if winner:
+            self._show_victory_screen(winner)
+
+    def _show_victory_screen(self, winner):
+        self.toast_manager.show(f"{winner.name} venceu com {winner.victory_points} pontos!")
+        SoundManager().play('construction')
+        from components.modal import Modal
+        from components.button import Button
+
+        class VictoryDialog(Modal):
+            def __init__(dialog_self, player, on_close):
+                width = int(SCREEN_WIDTH * 0.4)
+                height = int(SCREEN_HEIGHT * 0.3)
+                super().__init__(width, height, "Fim de Jogo!")
+                dialog_self.player = player
+                dialog_self.on_close = on_close
+                btn_w, btn_h = 120, 40
+                btn_x = dialog_self.x + (dialog_self.width - btn_w) // 2
+                btn_y = dialog_self.y + dialog_self.height - btn_h - 20
+                dialog_self.btn_close = Button(btn_x, btn_y, btn_w, btn_h, "Menu Principal", on_click=on_close)
+                try:
+                    dialog_self.font = pygame.font.Font("./assets/fonts/MedievalSharp-Regular.ttf", 24)
+                except Exception:
+                    dialog_self.font = pygame.font.SysFont("Arial", 24)
+
+            def handle_event(dialog_self, event):
+                if not dialog_self.visible:
+                    return False
+                if dialog_self.btn_close.handle_event(event):
+                    return True
+                return super().handle_event(event)
+
+            def render(dialog_self, surface):
+                if not dialog_self.visible:
+                    return
+                super().render(surface)
+                text = f"{dialog_self.player.name} venceu!"
+                text_surf = dialog_self.font.render(text, True, (50, 50, 50))
+                text_rect = text_surf.get_rect(centerx=dialog_self.rect.centerx, top=dialog_self.y + 60)
+                surface.blit(text_surf, text_rect)
+                pts_text = f"{dialog_self.player.victory_points} pontos de vitória"
+                pts_surf = dialog_self.font.render(pts_text, True, (80, 80, 80))
+                pts_rect = pts_surf.get_rect(centerx=dialog_self.rect.centerx, top=text_rect.bottom + 10)
+                surface.blit(pts_surf, pts_rect)
+                dialog_self.btn_close.render(surface)
+
+        def go_to_menu():
+            self._close_dialog()
+            self.manager.pop()
+
+        self.active_dialog = VictoryDialog(winner, go_to_menu)
+        self.active_dialog.show()
 
     def _handle_click(self, pos):
         from components.house import House
@@ -573,13 +573,8 @@ class Game(BaseScene):
         self.tabletop.update(dt)
         if self.active_dialog:
             self.active_dialog.update(dt)
-        # Update both displays so hover and internal state stay in sync
         try:
             self.resource_display.update(dt)
-        except Exception:
-            pass
-        try:
-            self.development_display.update(dt)
         except Exception:
             pass
 
@@ -587,7 +582,6 @@ class Game(BaseScene):
         self.btn_trade.update()
         self.turn_controls.update()
         self.card_display.update()
-        self.btn_dev_cards.update()
         self.btn_buy_card.update()
         self.toast_manager.update(dt)
 
@@ -611,18 +605,13 @@ class Game(BaseScene):
     def render(self, surface: pygame.Surface):
         surface.fill(SEA_BLUE)
         self.tabletop.render(surface)
-        # HUD overlay area: render either resources or development cards in the same space
-        if getattr(self, "show_development_cards", False):
-            self.development_display.render(surface)
-        else:
-            self.resource_display.render(surface)
+        self.resource_display.render(surface)
 
         self.btn_bank.render(surface)
         self.btn_trade.render(surface)
         self.player_list.render(surface)
         self.turn_controls.render(surface)
         self.card_display.render(surface)
-        self.btn_dev_cards.render(surface)
         self.btn_buy_card.render(surface)
 
         if self.active_dialog:
@@ -640,6 +629,11 @@ class Game(BaseScene):
     def _open_dev_card_dialog(self):
         self.active_dialog = DevelopmentCardDialog(
             self.current_player,
-            on_cancel=self._close_dialog
+            on_cancel=self._close_dialog,
+            on_play_card=self._on_dialog_play_card
         )
         self.active_dialog.show()
+
+    def _on_dialog_play_card(self, card):
+        self._close_dialog()
+        self._play_development_card(card)

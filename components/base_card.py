@@ -81,7 +81,7 @@ BaseCard = DevelopmentCard
 
 class KnightCard(DevelopmentCard):
     def __init__(self, **kwargs):
-        super().__init__(name="Knight", card_type=CardType.KNIGHT, **kwargs)
+        super().__init__(name="Cavaleiro", card_type=CardType.KNIGHT, **kwargs)
 
     def activate(self, turn_manager=None, **kwargs):
         # Placeholder for robber-move effect
@@ -99,7 +99,7 @@ class ProgressCard(DevelopmentCard):
 
 class RoadBuildingCard(ProgressCard):
     def __init__(self, **kwargs):
-        super().__init__(name="Road Building", **kwargs)
+        super().__init__(name="Construir Estradas", **kwargs)
 
     def activate(self, turn_manager=None, players=None, tabletop=None, edges=None, **kwargs):
         """Place two roads on the board without consuming resources.
@@ -132,7 +132,7 @@ class RoadBuildingCard(ProgressCard):
 
 class YearOfPlentyCard(ProgressCard):
     def __init__(self, **kwargs):
-        super().__init__(name="Year of Plenty", **kwargs)
+        super().__init__(name="Ano da Fartura", **kwargs)
 
     def activate(self, turn_manager=None, players=None, resources=None, bank=None, **kwargs):
         """Give the owner two resources chosen by the player.
@@ -166,7 +166,7 @@ class YearOfPlentyCard(ProgressCard):
 
 class MonopolyCard(ProgressCard):
     def __init__(self, **kwargs):
-        super().__init__(name="Monopoly", **kwargs)
+        super().__init__(name="Monopólio", **kwargs)
 
     def activate(self, turn_manager=None, players=None, resource=None, **kwargs):
         """Take all of `resource` from other players and give to owner.
@@ -195,9 +195,10 @@ class MonopolyCard(ProgressCard):
 
 class VictoryPointCard(DevelopmentCard):
     def __init__(self, **kwargs):
-        super().__init__(name="Victory Point", card_type=CardType.VICTORY_POINT, **kwargs)
+        super().__init__(name="Ponto de Vitória", card_type=CardType.VICTORY_POINT, **kwargs)
+
+    def can_activate(self, has_played_card_this_turn: bool = False):
+        return False, "Cartas de ponto de vitória são reveladas apenas ao final do jogo"
 
     def activate(self, turn_manager=None, **kwargs):
-        # Revealing victory point should update player's visible score;
-        # leave effect implementation for game logic; just move state.
-        return super().activate(turn_manager=turn_manager, **kwargs)
+        return False
