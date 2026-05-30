@@ -3,16 +3,12 @@ from constants.victory_points import CHAPEL, LIBRARY, MARKET, PALACE, UNIVERSITY
 
 DEVELOPMENT_CARDS = (
     [KNIGHT] * 14 +
-    [VICTORY_POINT] * 5 +
+    [CHAPEL] +
+    [LIBRARY] +
+    [MARKET] +
+    [PALACE] +
+    [UNIVERSITY] +
     [ROAD_BUILDING] * 2 +
     [YEAR_OF_PLENTY] * 2 +
     [MONOPOLY] * 2
 )
-
-VICTORY_POINTS = [
-    CHAPEL,
-    LIBRARY,
-    MARKET,
-    PALACE,
-    UNIVERSITY
-]

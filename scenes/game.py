@@ -10,15 +10,18 @@ from components.bank_trade_dialog import BankTradeDialog
 from components.player_trade_dialog import PlayerTradeDialog, TradeOfferDialog
 from components.player_list_panel import PlayerListPanel
 from components.turn_controls import TurnControls
-from components.development_card_display import DevelopmentCardDisplay
-from components.development_card_dialog import DevelopmentCardDialog
 from core.trade import BankTrade, PlayerTrade
 from systems.card_manager import CardManager
 from ui.toast import ToastManager
 from constants.types import ROCK, LAMB, WHEAT, TREE, BRICK
 from components.base_card import (
+    ChapelCard,
     KnightCard,
+    LibraryCard,
+    MarketCard,
+    PalaceCard,
     RoadBuildingCard,
+    UniversityCard,
     YearOfPlentyCard,
     MonopolyCard,
     VictoryPointCard,
@@ -107,10 +110,6 @@ class Game(BaseScene):
         turn_ctrl_height = int(190 * scale)
         self.turn_controls = TurnControls(SCREEN_WIDTH - panel_width - margin, SCREEN_HEIGHT - turn_ctrl_height - margin, panel_width, scale)
 
-        card_display_x = int(SCREEN_WIDTH * 0.55)
-        card_display_y = SCREEN_HEIGHT - bottom_margin - 10
-        self.card_display = DevelopmentCardDisplay(card_display_x, card_display_y, scale, on_click=self._open_dev_card_dialog)
-
     def handle_event(self, event: pygame.event.Event):
         if self.active_dialog:
             if self.active_dialog.handle_event(event):
@@ -173,8 +172,6 @@ class Game(BaseScene):
                 self._open_player_dialog()
                 return
 
-        if self.card_display.handle_event(event):
-            return
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
@@ -251,7 +248,6 @@ class Game(BaseScene):
         can_trade = self._can_trade()
         self.btn_bank.enabled = can_trade
         self.btn_trade.enabled = can_trade
-        self.card_display.enabled = not self.turn_manager.is_setup_phase
         self.btn_dev_cards.enabled = can_trade or self._can_build()
         # Buying development cards is disabled during setup phase
         self.btn_buy_card.enabled = self._can_build() and not self.turn_manager.is_setup_phase
@@ -369,6 +365,13 @@ class Game(BaseScene):
             self.active_dialog = RoadBuildingDialog(owner, self.tabletop, on_confirm=self._resolve_road_building, on_cancel=self._close_dialog)
             self.active_dialog.show()
             return
+        
+        if (isinstance(card, UniversityCard) or isinstance(card, LibraryCard) or isinstance(card, MarketCard) or isinstance(card, PalaceCard) or isinstance(card, ChapelCard) or isinstance(card, VictoryPointCard)):
+            self.current_player.use_victory_card()
+            self.card_manager.attempt_activate_card(owner, card)
+            self.toast_manager.show("Carta de Ponto de Vitória revelada!")
+            SoundManager().play('construction')
+            return
 
         # Fallback: immediate activation for other cards
         success = self.card_manager.attempt_activate_card(owner, card)
@@ -464,7 +467,6 @@ class Game(BaseScene):
         self.btn_bank.update()
         self.btn_trade.update()
         self.turn_controls.update()
-        self.card_display.update()
         self.btn_dev_cards.update()
         self.btn_buy_card.update()
         # legacy hand/dropdown removed: nothing to update here
@@ -500,7 +502,6 @@ class Game(BaseScene):
         self.btn_trade.render(surface)
         self.player_list.render(surface)
         self.turn_controls.render(surface)
-        self.card_display.render(surface)
         self.btn_dev_cards.render(surface)
         self.btn_buy_card.render(surface)
 
@@ -516,9 +517,3 @@ class Game(BaseScene):
         if player.settlements_count == 2:
             self.tabletop.distribute_initial_resources(player, house)
 
-    def _open_dev_card_dialog(self):
-        self.active_dialog = DevelopmentCardDialog(
-            self.current_player,
-            on_cancel=self._close_dialog
-        )
-        self.active_dialog.show()

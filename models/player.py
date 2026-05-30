@@ -17,19 +17,21 @@ class Player:
 
         # Cartas de desenvolvimento e Ponto de Vitória
         self.development_cards = []
-        self.victory_point_cards = []
+        self.cards_points = 0
 
         # Inventário de matérias-primas
         self.inventory = Inventory()
-        # Development cards owned by the player
-        self.development_cards = []
         # Flag to prevent playing more than one development card per turn
         self.played_development_card_this_turn = False
 
     @property
     def victory_points(self):
         """RN6, RN8: Calcula o total de pontos de vitória do jogador."""
-        return self.settlements_count + (self.cities_count * 2) + len(self.victory_point_cards)
+        return self.settlements_count + (self.cities_count * 2) + self.cards_points
+    
+    def use_victory_card(self):
+        self.cards_points += 1
+        return True
 
     # --- VERIFICAÇÃO DE FASE DO JOGO ---
     def is_in_setup_phase(self) -> bool:
