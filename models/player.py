@@ -15,23 +15,20 @@ class Player:
         self.cities_count = 0
         self.roads_count = 0
 
-        # Cartas de desenvolvimento e Ponto de Vitória
+        # Cartas de desenvolvimento
         self.development_cards = []
-        self.victory_point_cards = []
 
         # Inventário de matérias-primas
         self.inventory = Inventory()
-        # Development cards owned by the player
-        self.development_cards = []
         # Flag to prevent playing more than one development card per turn
         self.played_development_card_this_turn = False
 
     @property
     def victory_points(self):
-        """RN6, RN8: Calcula o total de pontos de vitória do jogador (incluindo cartas secretas)."""
+        """RN6, RN8: Calcula o total de pontos de vitória do jogador (incluindo cartas VP)."""
         from components.base_card import VictoryPointCard
-        vp_from_dev_cards = sum(1 for c in self.development_cards if isinstance(c, VictoryPointCard))
-        return self.settlements_count + (self.cities_count * 2) + len(self.victory_point_cards) + vp_from_dev_cards
+        vp_from_cards = sum(1 for c in self.development_cards if isinstance(c, VictoryPointCard))
+        return self.settlements_count + (self.cities_count * 2) + vp_from_cards
 
     @property
     def visible_victory_points(self):

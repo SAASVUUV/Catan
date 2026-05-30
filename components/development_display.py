@@ -16,6 +16,7 @@ class DevelopmentDisplay:
     def __init__(self, x: int, y: int, scale: float = 1.0):
         self.x = int(x)
         self.y = int(y)
+        self.xy = (self.x, self.y)
         self.card_width = int(44 * scale)
         self.card_height = int(66 * scale)
         self.card_spacing = int(9 * scale)
@@ -34,7 +35,11 @@ class DevelopmentDisplay:
         self.color_map = {
             str(CardType.KNIGHT): (100, 140, 220),
             str(CardType.PROGRESS): (120, 180, 120),
-            str(CardType.VICTORY_POINT): (218, 165, 32),
+            str(CardType.UNIVERSITY): (218, 165, 32),
+            str(CardType.MARKET): (220, 200, 120),
+            str(CardType.PALACE): (160, 120, 80),
+            str(CardType.CHAPEL): (140, 60, 180),
+            str(CardType.LIBRARY): (160, 120, 80),
             # progress subtypes by class name
             "RoadBuildingCard": (160, 120, 80),
             "YearOfPlentyCard": (220, 200, 120),
@@ -62,7 +67,7 @@ class DevelopmentDisplay:
                 if rect.collidepoint(pos):
                     # Clicked on a card group. Find the first playable card.
                     for card in cards:
-                        if card.state == CardState.READY:
+                        if card.state == CardState.READY or card.type in [CardType.VICTORY_POINT, CardType.UNIVERSITY, CardType.MARKET, CardType.PALACE, CardType.CHAPEL, CardType.LIBRARY]:
                             return card  # Return the card to be activated
 
                     # No READY card: attempt to show a helpful reason to the user.
@@ -93,7 +98,7 @@ class DevelopmentDisplay:
     def _groups(self) -> List[Tuple[str, int, List[object]]]:
         """Aggregate player's cards by (type/subtype) and return list of (key, count, cards).
 
-        Key is a display string identifying the group.
+        Key is a display string identifying the group (uses card.name in Portuguese).
         """
         if not self.player:
             return []
@@ -101,18 +106,18 @@ class DevelopmentDisplay:
         for c in getattr(self.player, "development_cards", []):
             if c is None:
                 continue
-            # Use subclass name for progress to differentiate subtypes
-            if getattr(c, "type", None) == CardType.PROGRESS:
-                key = c.__class__.__name__
-            else:
-                key = str(c.type) if getattr(c, "type", None) is not None else c.__class__.__name__
-
+            # Use card.name for display (Portuguese names)
+            key = getattr(c, "name", c.__class__.__name__)
             groups.setdefault(key, []).append(c)
 
         items = [(k, len(v), v) for k, v in groups.items()]
         # sort by count desc to show most relevant up to 5
         items.sort(key=lambda x: x[1], reverse=True)
-        return items[:5]
+        if len(items) > 5:
+            self.x = self.xy[0] - (self.card_width + self.card_spacing) * (len(items) - 5)
+        else:
+            self.x = self.xy[0]
+        return items
 
 
     def render(self, surface: pygame.Surface):
@@ -126,7 +131,7 @@ class DevelopmentDisplay:
             bg_rect = pygame.Rect(
                 self.x - padding,
                 self.y - padding,
-                5 * (self.card_width + self.card_spacing) + padding,
+                max(len(groups), 5) * (self.card_width + self.card_spacing) + padding,
                 self.card_height + padding * 2,
             )
             pygame.draw.rect(surface, BEIGE_MEDIUM, bg_rect, border_radius=8)
@@ -149,7 +154,7 @@ class DevelopmentDisplay:
         bg_rect = pygame.Rect(
             self.x - padding,
             self.y - padding,
-            len(groups) * (self.card_width + self.card_spacing) + padding,
+            max(len(groups), 5) * (self.card_width + self.card_spacing) + padding,
             self.card_height + padding * 2,
         )
         pygame.draw.rect(surface, BEIGE_MEDIUM, bg_rect, border_radius=8)

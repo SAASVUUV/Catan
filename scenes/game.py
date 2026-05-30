@@ -10,8 +10,6 @@ from components.bank_trade_dialog import BankTradeDialog
 from components.player_trade_dialog import PlayerTradeDialog, TradeOfferDialog
 from components.player_list_panel import PlayerListPanel
 from components.turn_controls import TurnControls
-from components.development_card_display import DevelopmentCardDisplay
-from components.development_card_dialog import DevelopmentCardDialog
 from core.trade import BankTrade, PlayerTrade
 from systems.card_manager import CardManager
 from ui.toast import ToastManager
@@ -21,7 +19,6 @@ from components.base_card import (
     RoadBuildingCard,
     YearOfPlentyCard,
     MonopolyCard,
-    VictoryPointCard,
 )
 from components.card_states import CardState
 from constants.colors import RED, BLUE, GREEN, BLACK, YELLOW, SEA_BLUE
@@ -101,11 +98,13 @@ class Game(BaseScene):
         self.player_list = PlayerListPanel(SCREEN_WIDTH - panel_width - margin, margin, panel_width, self.players, scale)
 
         turn_ctrl_height = int(190 * scale)
-        self.turn_controls = TurnControls(SCREEN_WIDTH - panel_width - margin, SCREEN_HEIGHT - turn_ctrl_height - margin, panel_width, scale)
+        turn_ctrl_y = SCREEN_HEIGHT - turn_ctrl_height - margin
+        self.turn_controls = TurnControls(SCREEN_WIDTH - panel_width - margin, turn_ctrl_y, panel_width, scale)
 
-        card_display_x = int(SCREEN_WIDTH * 0.65)
-        card_display_y = SCREEN_HEIGHT - bottom_margin - 10
-        self.card_display = DevelopmentCardDisplay(card_display_x, card_display_y, scale, on_click=self._open_dev_card_dialog)
+        from components.development_display import DevelopmentDisplay
+        self.development_display = DevelopmentDisplay(SCREEN_WIDTH * 0.2, SCREEN_HEIGHT - bottom_margin, scale)
+        self.btn_dev_cards = Button(btn_x + btn_w + btn_gap, btn_y + btn_h + btn_gap, btn_w, btn_h, "Desenv.", font_size=btn_font)
+        self.show_development_cards = False
 
     def handle_event(self, event: pygame.event.Event):
         if self.active_dialog:
@@ -154,13 +153,20 @@ class Game(BaseScene):
                 self._open_player_dialog()
                 return
 
-        if self.card_display.handle_event(event):
-            return
+        if self.show_development_cards:
+            result = self.development_display.handle_event(event)
+            if result is not None:
+                if isinstance(result, tuple):
+                    self.toast_manager.show(result[1])
+                else:
+                    self._play_development_card(result)
+                return
 
         if self._can_build() and not self.turn_manager.is_setup_phase and self.btn_buy_card.handle_event(event):
             success = self.card_manager.attempt_buy_card(self.current_player)
             if success:
                 SoundManager().play('construction')
+                self.development_display.set_player(self.current_player)
                 self.toast_manager.show("Carta comprada")
                 self._update_turn_state()
             return
@@ -168,6 +174,16 @@ class Game(BaseScene):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.manager.pop()
+                return
+
+        if self._can_build() or self._can_trade():
+            if self.btn_dev_cards.handle_event(event):
+                self.show_development_cards = not self.show_development_cards
+                if self.show_development_cards:
+                    self.development_display.set_player(self.current_player)
+                else:
+                    self.resource_display.set_player(self.current_player)
+                self._update_turn_state()
                 return
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -327,8 +343,14 @@ class Game(BaseScene):
         can_trade = self._can_trade()
         self.btn_bank.enabled = can_trade
         self.btn_trade.enabled = can_trade
-        self.card_display.enabled = not self.turn_manager.is_setup_phase
+        self.btn_dev_cards.enabled = can_trade or self._can_build()
         self.btn_buy_card.enabled = self._can_build() and not self.turn_manager.is_setup_phase
+        if self.show_development_cards:
+            self.btn_dev_cards.text = "Recursos"
+            self.development_display.set_player(self.current_player)
+        else:
+            self.btn_dev_cards.text = "Desenv."
+            self.resource_display.set_player(self.current_player)
 
         winner = self.turn_manager.check_victory()
         if winner:
@@ -474,6 +496,12 @@ class Game(BaseScene):
             self.toast_manager.show(reason)
             return
 
+        if isinstance(card, KnightCard):
+            self.card_manager.attempt_activate_card(owner, card)
+            self._begin_robber_tile_selection()
+            self.toast_manager.show("Escolha um terreno para mover o ladrão")
+            return
+
         if isinstance(card, YearOfPlentyCard):
             self.active_dialog = YearOfPlentyDialog(owner, self.bank, on_confirm=self._resolve_year_of_plenty, on_cancel=self._close_dialog)
             self.active_dialog.show()
@@ -573,15 +601,18 @@ class Game(BaseScene):
         self.tabletop.update(dt)
         if self.active_dialog:
             self.active_dialog.update(dt)
-        try:
-            self.resource_display.update(dt)
-        except Exception:
-            pass
+        if self.show_development_cards:
+            self.development_display.update()
+        else:
+            try:
+                self.resource_display.update(dt)
+            except Exception:
+                pass
 
         self.btn_bank.update()
         self.btn_trade.update()
         self.turn_controls.update()
-        self.card_display.update()
+        self.btn_dev_cards.update()
         self.btn_buy_card.update()
         self.toast_manager.update(dt)
 
@@ -605,13 +636,16 @@ class Game(BaseScene):
     def render(self, surface: pygame.Surface):
         surface.fill(SEA_BLUE)
         self.tabletop.render(surface)
-        self.resource_display.render(surface)
+        if self.show_development_cards:
+            self.development_display.render(surface)
+        else:
+            self.resource_display.render(surface)
 
         self.btn_bank.render(surface)
         self.btn_trade.render(surface)
         self.player_list.render(surface)
         self.turn_controls.render(surface)
-        self.card_display.render(surface)
+        self.btn_dev_cards.render(surface)
         self.btn_buy_card.render(surface)
 
         if self.active_dialog:
@@ -625,15 +659,3 @@ class Game(BaseScene):
     def _on_settlement_placed(self, player, house):
         if player.settlements_count == 2:
             self.tabletop.distribute_initial_resources(player, house)
-
-    def _open_dev_card_dialog(self):
-        self.active_dialog = DevelopmentCardDialog(
-            self.current_player,
-            on_cancel=self._close_dialog,
-            on_play_card=self._on_dialog_play_card
-        )
-        self.active_dialog.show()
-
-    def _on_dialog_play_card(self, card):
-        self._close_dialog()
-        self._play_development_card(card)

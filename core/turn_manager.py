@@ -1,6 +1,6 @@
 import random
 from constants.phases import TurnPhase
-from constants.deck import DEVELOPMENT_CARDS, VICTORY_POINTS
+from constants.deck import DEVELOPMENT_CARDS
 from constants.development_cards import VICTORY_POINT
 from constants.types import ROCK, WHEAT, LAMB
 
@@ -10,8 +10,6 @@ class TurnManager:
         self.players = players
         self.development_cards = list(DEVELOPMENT_CARDS)
         random.shuffle(self.development_cards)
-        self.victory_points_deck = list(VICTORY_POINTS)
-        random.shuffle(self.victory_points_deck)
         self.is_setup_phase = True
         self.setup_order = list(range(len(players))) + list(range(len(players)-1, -1, -1))
         self.setup_index = 0
