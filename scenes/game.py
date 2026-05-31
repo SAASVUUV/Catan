@@ -10,11 +10,12 @@ from components.bank_trade_dialog import BankTradeDialog
 from components.player_trade_dialog import PlayerTradeDialog, TradeOfferDialog
 from components.player_list_panel import PlayerListPanel
 from components.turn_controls import TurnControls
-from core.trade import BankTrade, PlayerTrade
+from core.trade import BankTrade, PlayerTrade, TradeOffer
 from systems.card_manager import CardManager
 from systems.achievements import AchievementsManager
+from systems.bot_ai import BotDecisionMaker
 from ui.toast import ToastManager
-from constants.types import ROCK, LAMB, WHEAT, TREE, BRICK
+from constants.types import ROCK, LAMB, WHEAT, TREE, BRICK, GENERIC
 from components.base_card import (
     KnightCard,
     RoadBuildingCard,
@@ -35,7 +36,7 @@ from components.robber_dialogs import DiscardResourcesDialog, RobberStealDialog,
 
 
 class Game(BaseScene):
-    def __init__(self, manager=None):
+    def __init__(self, manager=None, bot_list=None):
         self.manager = manager
         self.players = [
             Player(1, "Player 1", RED),
@@ -43,6 +44,11 @@ class Game(BaseScene):
             Player(3, "Player 3", GREEN),
             Player(4, "Player 4", YELLOW)
         ]
+        if bot_list:
+            for slot in bot_list:
+                if 1 <= slot <= 4:
+                    self.players[slot - 1].is_bot = True
+        print(bot_list)
 
         """ # Para teste: dar cartas aos jogadores
         self.players[0].victory_point_cards.append(CHAPEL)
@@ -52,6 +58,12 @@ class Game(BaseScene):
         self.card_manager = CardManager(self.players)
         self.achievements_manager = AchievementsManager(self.players)
         self.turn_manager.shuffle_player_order()
+        
+        # Initialize bot decision makers
+        self.bot_deciders = {}
+        for player in self.players:
+            if player.is_bot:
+                self.bot_deciders[player.id] = BotDecisionMaker(player)
 
         hex_radius = int(SCREEN_HEIGHT * 0.085)
         board_x = int(SCREEN_WIDTH * 0.2)
@@ -68,6 +80,7 @@ class Game(BaseScene):
         self.bank = Bank()
         self.pending_offer = None
         self.pending_targets = []
+        self._bot_timer = 0
         self._update_turn_state()
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         self._last_player = self.current_player
@@ -232,6 +245,15 @@ class Game(BaseScene):
 
         player, discard_count = self._discard_queue.pop(0)
         self._discarding_player = player
+        
+        # If bot, automatically discard
+        if player.is_bot:
+            bot = self.bot_deciders.get(player.id)
+            if bot:
+                selection = bot.select_discard_resources(discard_count)
+                self._confirm_discard(selection)
+                return
+        
         self.active_dialog = DiscardResourcesDialog(player, discard_count, on_confirm=self._confirm_discard)
         self.active_dialog.show()
 
@@ -251,6 +273,21 @@ class Game(BaseScene):
     def _begin_robber_tile_selection(self):
         self.awaiting_robber_tile = True
         self.toast_manager.show("Escolha outro terreno para mover o ladrao")
+        
+        # If current player is bot, automatically move robber
+        player = self.current_player
+        if player.is_bot:
+            bot = self.bot_deciders.get(player.id)
+            if bot:
+                all_tiles = self.tabletop.tiles
+                available_tiles = [t for t in all_tiles if t != self.tabletop.robber_tile]
+                if available_tiles:
+                    best_tile = bot.select_robber_tile(available_tiles)
+                    if best_tile:
+                        self.tabletop.move_robber(best_tile)
+                        self.awaiting_robber_tile = False
+                        SoundManager().play('ladrao_move')
+                        self._finish_robber_move(best_tile)
 
     def _handle_robber_tile_click(self, pos):
         tile = self.tabletop.get_tile_at(pos)
@@ -273,7 +310,12 @@ class Game(BaseScene):
             self.toast_manager.show("Ladrao movido. Nao ha jogador adjacente para roubar")
             self._update_turn_state()
             return
-
+        
+        if self.current_player.is_bot:
+            victim = random.choice(candidates)
+            self._steal_random_resource(victim)
+            return
+        
         self.active_dialog = RobberStealDialog(
             candidates,
             on_select=self._steal_random_resource,
@@ -427,7 +469,7 @@ class Game(BaseScene):
             was_empty = isinstance(target, House) and target.level == 0
             # Passa all_roads se for uma estrada
             if isinstance(target, Road):
-                result = target.try_build(self.current_player, self.tabletop.roads)
+                result = target.try_build(self.current_player, all_roads=self.tabletop.roads)
             else:
                 result = target.try_build(self.current_player)
             
@@ -445,6 +487,7 @@ class Game(BaseScene):
                     if self.turn_manager.setup_turn_complete():
                         self.turn_manager.next_turn()
                 if isinstance(target, Road):
+                    SoundManager().play('road')
                     self.achievements_manager.update_longest_road(self.tabletop.roads)
                 self._update_turn_state()
 
@@ -482,6 +525,17 @@ class Game(BaseScene):
             self._close_dialog()
             return
         target = self.pending_targets.pop(0)
+        
+        # If target is a bot, automatically accept or reject
+        if target.is_bot:
+            bot = self.bot_deciders.get(target.id)
+            if bot and bot.should_accept_trade_offer(self.pending_offer):
+                self._execute_player_trade(self.pending_offer, target)
+                self._show_next_target()
+            else:
+                self._show_next_target()
+            return
+        
         self.active_dialog = TradeOfferDialog(
             self.pending_offer,
             target,
@@ -630,6 +684,14 @@ class Game(BaseScene):
 
         if time_left <= 0:
             self._force_skip_turn()
+        
+        # Execute bot actions
+        if self.current_player.is_bot and not self.active_dialog and not self.awaiting_robber_tile:
+            self._bot_timer += dt
+            if self._bot_timer >= 1.0:  # Execute bot action every 1 second
+                self._bot_timer = 0.0
+                self._execute_bot_action()
+
 
     def _force_skip_turn(self):
         if self.active_dialog:
@@ -666,3 +728,240 @@ class Game(BaseScene):
     def _on_settlement_placed(self, player, house):
         if player.settlements_count == 2:
             self.tabletop.distribute_initial_resources(player, house)
+
+    # ========== BOT AUTOMATION ==========
+
+    def _execute_bot_action(self):
+        """Execute a single bot action based on current game phase."""
+        player = self.current_player
+        if not player.is_bot:
+            return
+        
+        # Setup phase: auto-place settlement and road
+        if self.turn_manager.is_setup_phase:
+            self._bot_setup_phase()
+            return
+        
+        # Dice phase: auto-roll
+        if self.turn_manager.current_phase == TurnPhase.DICE:
+            self._do_dice_roll()
+            #self._do_next_phase()
+            return
+        
+        # Commerce phase: auto-trade
+        if self.turn_manager.current_phase == TurnPhase.COMMERCE:
+            self._bot_commerce_phase()
+            return
+        
+        # Construction phase: auto-build
+        if self.turn_manager.current_phase == TurnPhase.CONSTRUCTION:
+            self._bot_construction_phase()
+            return
+
+    def _bot_setup_phase(self):
+        """Bot places settlement and road during setup."""
+        if self.turn_manager.setup_turn_complete():
+            self.turn_manager.next_turn()
+            self._update_turn_state()
+            return
+
+        player = self.current_player
+        
+        # Place settlement if not yet placed
+        if not self.turn_manager.setup_built_house:
+            buildables = self.tabletop.houses
+            houses = [b for b in buildables if hasattr(b, 'level')]
+            available = [h for h in houses if h.level == 0 and h._can_place_settlement(player)]
+            if available:
+                best = random.choice(available[:3])  # Choose random from top 3
+                best.try_build(player)
+                self.turn_manager.setup_record_house()
+                SoundManager().play('construction')
+                self._update_turn_state()
+                return
+        
+        # Place road if not yet placed
+        if not self.turn_manager.setup_built_road:
+            buildables = self.tabletop.roads
+            roads = [b for b in buildables if hasattr(b, 'owner') and not hasattr(b, 'level')]
+            available = [r for r in roads if not r.owner and r._is_adjacent_to_player(player, self.tabletop.roads)]
+            if available:
+                best = random.choice(available[:3])
+                best.try_build(player, all_roads=self.tabletop.roads)
+                self.turn_manager.setup_record_road()
+                SoundManager().play('road')
+                self._update_turn_state()
+                return
+
+    def _bot_commerce_phase(self):
+        """Bot handles trading during commerce phase."""
+        player = self.current_player
+        bot = self.bot_deciders.get(player.id)
+        if not bot:
+            return
+        
+        # Try bank trade first
+        bank_trade = bot.get_bank_trade(self.tabletop.ports)
+        if bank_trade:
+            give_type, give_count, receive_type = bank_trade
+            BankTrade.execute(player, give_type, give_count, receive_type)
+            self.toast_manager.show(f"{player.name} trocou com o banco")
+            self._update_turn_state()
+            return
+        
+        # Try 4 for 3 trade with other players
+        trade_4_3 = bot.should_make_4_for_3_trade()
+        if trade_4_3:
+            give_type, give_count, receive_type, receive_count = trade_4_3
+            # Create trade offer
+            offer = TradeOffer(
+                player, 
+                None,
+                {give_type: give_count},
+                {receive_type: receive_count}
+            )
+            # Find a player who can accept
+            for other_player in self.players:
+                if other_player == player:
+                    continue
+                other_player_inventory = other_player.inventory
+                if other_player_inventory.has(receive_type, receive_count):
+                    # Execute trade
+                    other_player_inventory.remove(receive_type, receive_count)
+                    other_player_inventory.add(give_type, give_count)
+                    player.inventory.remove(give_type, give_count)
+                    player.inventory.add(receive_type, receive_count)
+                    self.toast_manager.show(f"{player.name} trocou com {other_player.name}")
+                    SoundManager().play('confirm_trade')
+                    self._update_turn_state()
+                    return
+                
+        if not bank_trade and not trade_4_3:
+            # No trades to make, end commerce phase
+            self._do_next_phase()
+
+    def _bot_construction_phase(self):
+        """Bot handles building during construction phase."""
+        player = self.current_player
+        bot = self.bot_deciders.get(player.id)
+        if not bot:
+            return
+        
+        # Priority: Build settlement
+        if bot.should_build_settlement():
+            self._bot_build_settlement()
+            return
+        
+        # Priority: Build road
+        if bot.should_build_road():
+            self._bot_build_road()
+            return
+        
+        # Priority: Build city
+        if bot.should_build_city():
+            self._bot_build_city()
+            return
+        
+        # Priority: Buy development card
+        turn_num = self.turn_manager.turn_count if hasattr(self.turn_manager, 'turn_count') else 0
+        if bot.should_buy_development_card(turn_num):
+            success = self.card_manager.attempt_buy_card(player)
+            if success:
+                player.turns_since_last_dev_card = 0
+                SoundManager().play('construction')
+                self.toast_manager.show(f"{player.name} comprou uma carta de desenvolvimento")
+                self._update_turn_state()
+                return
+        else:
+            # Increment dev card purchase counter
+            player.turns_since_last_dev_card += 1
+        
+        # If nothing to do, end turn
+        self._do_end_turn()
+
+    def _bot_build_settlement(self):
+        """Bot builds a settlement."""
+        player = self.current_player
+        buildables = self.tabletop.houses
+        houses = [b for b in buildables if hasattr(b, 'level')]
+        available = [h for h in houses if h.level == 0 and h._can_place_settlement(player)]
+        
+        if available:
+            # Choose random from available
+            best = random.choice(available[:5])
+            if best.try_build(player):
+                SoundManager().play('construction')
+                self.toast_manager.show(f"{player.name} construiu uma aldeia")
+                self._update_turn_state()
+                return True
+        return False
+
+    def _bot_build_road(self):
+        """Bot builds a road."""
+        player = self.current_player
+        buildables = self.tabletop.roads
+        roads = [b for b in buildables if hasattr(b, 'owner') and not hasattr(b, 'level')]
+        available = [r for r in roads if not r.owner and r._is_adjacent_to_player(player, self.tabletop.roads)]
+        
+        if available:
+            # Choose random from available
+            best = random.choice(available[:5])
+            if best.try_build(player, all_roads=self.tabletop.roads):
+                SoundManager().play('road')
+                self.toast_manager.show(f"{player.name} construiu uma estrada")
+                self.achievements_manager.update_longest_road(self.tabletop.roads)
+                self._update_turn_state()
+                return True
+        return False
+
+    def _bot_build_city(self):
+        """Bot upgrades a settlement to a city."""
+        player = self.current_player
+        buildables = self.tabletop.houses
+        houses = [b for b in buildables if hasattr(b, 'level')]
+        upgradable = [h for h in houses if h.level == 1 and h.owner == player]
+        
+        if upgradable:
+            # Choose random from available
+            best = random.choice(upgradable[:3])
+            if best.try_build(player):
+                SoundManager().play('construction')
+                self.toast_manager.show(f"{player.name} atualizou para uma cidade")
+                self._update_turn_state()
+                return True
+        return False
+
+    def _bot_handle_discard(self):
+        """Bot automatically selects resources to discard when >7."""
+        player = self._discarding_player
+        if not player or not player.is_bot:
+            return
+        
+        bot = self.bot_deciders.get(player.id)
+        if not bot:
+            return
+        
+        discard_count = player.inventory.total() // 2
+        selection = bot.select_discard_resources(discard_count)
+        self._confirm_discard(selection)
+
+    def _bot_handle_robber_move(self):
+        """Bot automatically moves robber to steal from opponent."""
+        player = self.current_player
+        if not player.is_bot:
+            return
+        
+        bot = self.bot_deciders.get(player.id)
+        if not bot:
+            return
+        
+        # Get all tiles except current robber tile
+        all_tiles = self.tabletop.tiles
+        available_tiles = [t for t in all_tiles if t != self.tabletop.robber_tile]
+        
+        if available_tiles:
+            best_tile = bot.select_robber_tile(available_tiles)
+            if best_tile:
+                self.tabletop.move_robber(best_tile)
+                self.awaiting_robber_tile = False
+                SoundManager().play('ladrao_move')

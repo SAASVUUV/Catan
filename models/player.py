@@ -5,10 +5,11 @@ from components.card_states import CardState
 
 
 class Player:
-    def __init__(self, player_id: int, name: str, color: tuple):
+    def __init__(self, player_id: int, name: str, color: tuple, is_bot: bool = False):
         self.id = player_id
         self.name = name
         self.color = color
+        self.is_bot = is_bot
 
         # Contagem de estruturas ativas no tabuleiro
         self.settlements_count = 0
@@ -27,6 +28,9 @@ class Player:
         self.has_longest_road = False
         self.has_largest_army = False
         self.knights_played = 0
+        
+        # Tracking for bot actions
+        self.turns_since_last_dev_card = 0
 
     @property
     def played_knights_count(self):
@@ -135,3 +139,44 @@ class Player:
         card.bought_this_turn = True
         card.state = CardState.LOCKED
         self.development_cards.append(card)
+
+    # --- Bot Helper Methods ---
+    @property
+    def total_resources(self) -> int:
+        """Count total resources in hand."""
+        return self.inventory.total()
+
+    def get_resource_counts(self) -> dict:
+        """Return copy of current resources."""
+        return dict(self.inventory.cards)
+
+    def get_most_abundant_resource(self) -> int:
+        """Return the resource type with most cards, or None."""
+        counts = self.get_resource_counts()
+        if not counts:
+            return None
+        return max(counts.items(), key=lambda x: x[1])[0]
+
+    def get_least_abundant_resource(self) -> int:
+        """Return the resource type with least cards (excluding 0), or None."""
+        counts = self.get_resource_counts()
+        if not counts:
+            return None
+        non_zero = {k: v for k, v in counts.items() if v > 0}
+        if not non_zero:
+            return None
+        return min(non_zero.items(), key=lambda x: x[1])[0]
+
+    def would_exceed_hand_limit(self, additional: int = 0) -> bool:
+        """Check if player would have >7 cards total."""
+        return self.inventory.total() + additional > 7
+
+    def can_afford_anything(self) -> bool:
+        """Check if player can afford any construction."""
+        return (self.has_resources_for_road() or 
+                self.has_resources_for_settlement() or 
+                self.has_resources_for_city())
+
+    def has_resources_for_dev_card(self) -> bool:
+        """Check if player can buy a development card."""
+        return self.inventory.has(ROCK, 1) and self.inventory.has(LAMB, 1) and self.inventory.has(WHEAT, 1)
