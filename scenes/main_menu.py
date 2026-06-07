@@ -79,7 +79,11 @@ class MainMenu(BaseScene):
             pygame.quit()
  
         if self.btn_start.handle_event(event):
-            self.manager.replace(game.Game(self.manager))
+            bot_list = []
+            for slot in self.slots:
+                if slot.is_bot:
+                    bot_list.append(slot.index + 1)
+            self.manager.replace(game.Game(self.manager, bot_list=bot_list))
         if self.btn_config.handle_event(event):
             self.manager.replace(configurations.Configurations(self.manager))
         if self.btn_quit.handle_event(event):
