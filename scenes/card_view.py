@@ -1,4 +1,5 @@
 import pygame
+from utils.resources import resource_path
 from constants.colors import BLACK, RED
 from components.card_states import CardState
 
@@ -12,7 +13,7 @@ class CardView:
         self.card = card
         self.rect = pygame.Rect(x, y, width, height)
         
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         try:
             self.font = pygame.font.Font(caminho_fonte, 12)
             self.title_font = pygame.font.Font(caminho_fonte, 14)

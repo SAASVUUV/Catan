@@ -1,16 +1,16 @@
 import pygame
 from constants.colors import BLACK
+from utils.resources import resource_path
 
 class Label:
 
     def __init__(self, text, x, y, size=20):
-        path = "./assets/fonts/MedievalSharp-Regular.ttf"
-        
         self.color = BLACK
         self.text = text
         self.pos = (x, y)
+        path = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         try:
-            self.font = pygame.font.Font(path, size,)
+            self.font = pygame.font.Font(path, size)
         except FileNotFoundError:
             self.font = pygame.font.SysFont("serif", size, bold=True)
     

@@ -418,8 +418,9 @@ class Game(BaseScene):
                 btn_x = dialog_self.x + (dialog_self.width - btn_w) // 2
                 btn_y = dialog_self.y + dialog_self.height - btn_h - 20
                 dialog_self.btn_close = Button(btn_x, btn_y, btn_w, btn_h, "Menu Principal", on_click=on_close)
+                from utils.resources import resource_path
                 try:
-                    dialog_self.font = pygame.font.Font("./assets/fonts/MedievalSharp-Regular.ttf", 24)
+                    dialog_self.font = pygame.font.Font(resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf'), 24)
                 except Exception:
                     dialog_self.font = pygame.font.SysFont("Arial", 24)
 

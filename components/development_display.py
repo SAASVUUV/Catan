@@ -1,6 +1,7 @@
 import pygame
 from typing import List, Tuple
 from typing import List, Tuple, Optional
+from utils.resources import resource_path
 
 from components.card_states import CardState
 from components.card_types import CardType
@@ -20,7 +21,7 @@ class DevelopmentDisplay:
         self.card_width = int(44 * scale)
         self.card_height = int(66 * scale)
         self.card_spacing = int(9 * scale)
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         try:
             self.font = pygame.font.Font(caminho_fonte, int(18 * scale))
             self.title_font = pygame.font.Font(caminho_fonte, int(14 * scale))

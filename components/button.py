@@ -2,13 +2,14 @@ import pygame
 from constants.colors import *
 from .hover import Hover
 from utils.sound import SoundManager
+from utils.resources import resource_path
 
 class Button:
     def __init__(self, x, y, width, height, text, font_size=20, bg_image=None, shadow=False, enabled=True, on_click=None):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         self.on_click = on_click
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         self.font = pygame.font.Font(caminho_fonte, font_size)
         self.on_click = on_click
         self.hover = Hover(self.rect.collidepoint, on_mouse_click=self._on_click)

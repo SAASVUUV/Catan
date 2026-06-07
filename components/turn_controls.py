@@ -3,6 +3,7 @@ from .button import Button
 from .dice import Dice
 from constants.colors import BEIGE_LIGHT, BROWN_DARK, BLACK
 from constants.phases import TurnPhase
+from utils.resources import resource_path
 
 
 PHASE_LABELS = {
@@ -25,7 +26,7 @@ class TurnControls:
         self.time_left = 90.0
 
         font_size = int(22 * scale)
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         self.font = pygame.font.Font(caminho_fonte, font_size)
 
         dice_size = int(48 * scale)

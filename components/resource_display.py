@@ -3,6 +3,7 @@ from constants.types import ROCK, TREE, LAMB, BRICK, WHEAT
 from constants.colors import BEIGE_MEDIUM, BROWN_DARK
 from constants.types_colors import RESOURCE_COLORS
 from models.inventory import TRADEABLE_RESOURCES
+from utils.resources import resource_path
 
 RESOURCE_NAMES = {
     ROCK: "Pedra",
@@ -21,7 +22,7 @@ class ResourceDisplay:
         self.card_height = int(66 * scale)
         self.card_spacing = int(9 * scale)
         font_size = int(24 * scale)
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         self.font = pygame.font.Font(caminho_fonte, font_size)
 
     def set_player(self, player):

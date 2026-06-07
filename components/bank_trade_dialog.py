@@ -6,6 +6,7 @@ from models.inventory import TRADEABLE_RESOURCES
 from constants.colors import BEIGE_MEDIUM, BROWN_DARK, GOLD
 from constants.types import ROCK, TREE, LAMB, BRICK, WHEAT
 from constants.types_colors import RESOURCE_COLORS
+from utils.resources import resource_path
 
 class BankTradeDialog(Modal):
     def __init__(self, player, ports, on_confirm, on_cancel):
@@ -98,7 +99,7 @@ class BankTradeDialog(Modal):
 
         super().render(surface)
 
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         font = pygame.font.Font(caminho_fonte, 16)
 
         ratio_text = font.render(f"Taxa: {self.ratio}:1", True, BROWN_DARK)
