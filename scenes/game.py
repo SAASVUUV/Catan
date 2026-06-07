@@ -105,7 +105,9 @@ class Game(BaseScene):
         btn_gap = int(10 * scale)
         self.btn_bank = Button(btn_x, btn_y, btn_w, btn_h, "Banco", font_size=btn_font)
         self.btn_trade = Button(btn_x + btn_w + btn_gap, btn_y, btn_w, btn_h, "Trocar", font_size=btn_font)
-        self.btn_buy_card = Button(btn_x, btn_y + btn_h + btn_gap, btn_w, btn_h, "Comprar Carta", font_size=btn_font)
+        second_row_y = btn_y + btn_h + btn_gap
+        self.btn_dev_cards = Button(btn_x, second_row_y, btn_w, btn_h, "Desenv.", font_size=btn_font)
+        self.btn_buy_card = Button(btn_x + btn_w + btn_gap, second_row_y, btn_w, btn_h, "Comprar Carta", font_size=btn_font)
 
 
         panel_width = int(290 * scale)
@@ -118,7 +120,6 @@ class Game(BaseScene):
 
         from components.development_display import DevelopmentDisplay
         self.development_display = DevelopmentDisplay(SCREEN_WIDTH * 0.2, SCREEN_HEIGHT - bottom_margin, scale)
-        self.btn_dev_cards = Button(btn_x + btn_w + btn_gap, btn_y + btn_h + btn_gap, btn_w, btn_h, "Desenv.", font_size=btn_font)
         self.show_development_cards = False
 
     def handle_event(self, event: pygame.event.Event):
