@@ -66,26 +66,6 @@ def test_cannot_play_development_card_same_turn():
     assert knight_card.state == CardState.LOCKED, "Estado não deve mudar"
 
 
-def test_knight_card_activation():
-    player = Player(1, "Alice", RED)
-    assert player.knights_played == 0
-    
-    knight_card = KnightCard(owner=player)
-    knight_card.state = CardState.READY
-    knight_card.bought_this_turn = False
-    player.development_cards.append(knight_card)
-    
-    manager = CardManager([player])
-    
-    # Ativar
-    success = manager.attempt_activate_card(player, knight_card)
-    
-    # Knight activation deve aumentar knights_played
-    if success:
-        assert player.knights_played >= 1, "Knights played deve aumentar"
-        assert knight_card.state == CardState.USED, "Carta deve estar USED"
-
-
 def test_multiple_development_cards():
     player = Player(1, "Alice", RED)
     

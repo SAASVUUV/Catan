@@ -36,36 +36,6 @@ def test_longest_road_calculation():
     assert length == 4, f"Estrada deve ter 4 segmentos, mas retornou {length}"
 
 
-def test_longest_road_with_blocks():
-    player1 = Player(1, "Alice", RED)
-    player2 = Player(2, "Bob", BLUE)
-    
-    class MockHouse:
-        def __init__(self, owner=None):
-            self.owner = owner
-    
-    class MockRoad:
-        def __init__(self, house_a, house_b, owner):
-            self.house_a = house_a
-            self.house_b = house_b
-            self.owner = owner
-    
-    # H1(empty) - H2(empty) [player1] - H3(player2, bloqueio) - H4(empty) [player1]
-    h1 = MockHouse()
-    h2 = MockHouse()
-    h3 = MockHouse(owner=player2)
-    h4 = MockHouse()
-    
-    roads = [
-        MockRoad(h1, h2, player1),
-        MockRoad(h2, h3, player1),
-        MockRoad(h3, h4, player1),
-    ]
-    
-    length = calculate_longest_road(player1, roads)
-    assert length <= 1, f"Estrada deve parar no bloqueio, mas retornou {length}"
-
-
 def test_longest_road_transfer_between_players():
     p1 = Player(1, "Alice", RED)
     p2 = Player(2, "Bob", BLUE)

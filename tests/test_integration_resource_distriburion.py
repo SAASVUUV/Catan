@@ -1,11 +1,3 @@
-"""
-TESTE DE INTEGRAÇÃO: Distribuição de Recursos em Cascata
-
-Objetivo: Validar que quando um número é rolado, os tiles com esse número 
-distribuem recursos corretamente aos jogadores com casas adjacentes.
-
-Integra: TurnManager → Tabletop → Player.inventory
-"""
 from unittest.mock import patch
 from models.player import Player
 from models.inventory import Inventory
