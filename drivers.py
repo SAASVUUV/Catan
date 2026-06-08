@@ -51,6 +51,13 @@ CASE_GROUPS = {
             "tests/test_ui_dialogs.py",
         ),
     ),
+    "system": TestCaseGroup(
+        name="system",
+        description="Testes de sistema de ponta a ponta e recuperação.",
+        targets=(
+            "tests/test_system_full_game.py",
+        ),
+    ),
     "all": TestCaseGroup(
         name="all",
         description="Suíte completa do projeto.",
