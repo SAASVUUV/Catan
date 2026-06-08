@@ -9,7 +9,6 @@ from constants.types import BRICK, TREE, LAMB, WHEAT, ROCK
 from constants.colors import RED, BLUE, GREEN, YELLOW
 from constants.phases import TurnPhase
 
-
 def test_full_game_setup_phase_two_players():
     # Setup: 2 players, determinístico
     players = [
@@ -359,3 +358,111 @@ def test_full_game_development_cards():
     # Se tem 3+ cavaleiros, deve ter largest_army
     if p1.knights_played >= 3:
         assert p1.has_largest_army, "Deve ter largest_army com 3+ cavaleiros"
+
+def test_recovery_after_losing_resource_during_build(monkeypatch):
+    # Setup do jogo para o teste de recuperação
+    players = [Player(1, "Alice", RED)]
+    
+    # Usar um mock para o tabuleiro para isolar a lógica de construção
+    mock_board = MagicMock()
+    mock_board.get_path.return_value = MagicMock()
+    mock_board.is_valid_road_connection.return_value = True  # Simula uma conexão válida
+    
+    construction_manager = ConstructionManager(mock_board)
+    
+    player = players[0]
+    
+    # Garante que o jogador tenha recursos para exatamente uma estrada
+    player.inventory.cards[BRICK] = 1
+    player.inventory.cards[TREE] = 1
+    
+    # Simula a perda de um recurso essencial durante a chamada de construção
+    original_buy_road = player.buy_road
+    def mock_buy_road(*args, **kwargs):
+        # Simula a falha: recurso desaparece antes da validação final
+        player.inventory.remove(BRICK, 1)
+        return original_buy_road(*args, **kwargs)
+        
+    monkeypatch.setattr(player, 'buy_road', mock_buy_road)
+    
+    # Tenta construir a estrada (deve falhar)
+    initial_road_count = player.roads_count
+    road_built = construction_manager.attempt_build_road(player, (0, 0))
+
+    # Verificações de recuperação
+    assert not road_built, "A construção da estrada deveria ter falhado."
+    assert player.roads_count == initial_road_count, "Nenhuma estrada deveria ter sido adicionada ao jogador."
+    assert player.inventory.cards[BRICK] == 0, "O recurso BRICK deveria ter sido consumido pela falha simulada."
+    assert player.inventory.cards[TREE] == 1, "O recurso TREE não deveria ter sido consumido na falha."
+
+
+def test_recovery_after_losing_resource_during_settlement_purchase(monkeypatch):
+    # Setup do jogo para o teste de recuperação de aldeia
+    players = [Player(1, "Alice", RED)]
+
+    mock_board = MagicMock()
+    mock_board.get_intersection.return_value = MagicMock()
+    mock_board.respects_distance_rule.return_value = True
+    mock_board.has_connecting_road.return_value = True
+
+    construction_manager = ConstructionManager(mock_board)
+
+    player = players[0]
+    player.inventory.cards[BRICK] = 1
+    player.inventory.cards[TREE] = 1
+    player.inventory.cards[LAMB] = 1
+    player.inventory.cards[WHEAT] = 1
+
+    original_buy_settlement = player.buy_settlement
+
+    def mock_buy_settlement(*args, **kwargs):
+        # Simula a falha: um recurso some durante a validação da compra
+        player.inventory.remove(WHEAT, 1)
+        return original_buy_settlement(*args, **kwargs)
+
+    monkeypatch.setattr(player, "buy_settlement", mock_buy_settlement)
+
+    initial_settlement_count = player.settlements_count
+    settlement_built = construction_manager.attempt_build_settlement(player, (0, 1))
+
+    assert not settlement_built, "A compra da aldeia deveria ter falhado."
+    assert player.settlements_count == initial_settlement_count, "Nenhuma aldeia deveria ter sido adicionada ao jogador."
+    assert player.inventory.cards[WHEAT] == 0, "O recurso WHEAT deveria ter sido consumido pela falha simulada."
+    assert player.inventory.cards[BRICK] == 1, "O recurso BRICK não deveria ter sido consumido na falha."
+
+
+def test_recovery_after_losing_resource_during_city_upgrade(monkeypatch):
+    # Setup do jogo para o teste de recuperação de cidade
+    players = [Player(1, "Alice", RED)]
+
+    mock_board = MagicMock()
+    mock_intersection = MagicMock()
+    mock_intersection.has_player_settlement.return_value = True
+    mock_intersection.upgrade_to_city.return_value = None
+    mock_board.get_intersection.return_value = mock_intersection
+
+    construction_manager = ConstructionManager(mock_board)
+
+    player = players[0]
+    player.settlements_count = 1
+    player.inventory.cards[ROCK] = 3
+    player.inventory.cards[WHEAT] = 2
+
+    original_buy_city = player.buy_city
+
+    def mock_buy_city(*args, **kwargs):
+        # Simula a falha: um recurso desaparece antes da validação final
+        player.inventory.remove(ROCK, 1)
+        return original_buy_city(*args, **kwargs)
+
+    monkeypatch.setattr(player, "buy_city", mock_buy_city)
+
+    initial_city_count = player.cities_count
+    city_built = construction_manager.attempt_upgrade_to_city(player, (0, 2))
+
+    assert not city_built, "A melhoria para cidade deveria ter falhado."
+    assert player.cities_count == initial_city_count, "Nenhuma cidade deveria ter sido adicionada ao jogador."
+    assert player.settlements_count == 1, "A aldeia original não deveria ter sido removida na falha."
+    assert player.inventory.cards[ROCK] == 2, "O recurso ROCK deveria ter sido consumido pela falha simulada."
+    assert player.inventory.cards[WHEAT] == 2, "O recurso WHEAT não deveria ter sido consumido na falha."
+
