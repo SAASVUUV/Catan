@@ -1,4 +1,5 @@
 import pygame
+from utils.resources import resource_path
 
 class Text:
 
@@ -6,7 +7,7 @@ class Text:
         self.text = text
         self.font_size = font_size
         self.color = color
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         self.font = pygame.font.Font(caminho_fonte, font_size)
         self.pos = pos
 

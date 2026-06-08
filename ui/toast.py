@@ -1,11 +1,12 @@
 import time
 import pygame
+from utils.resources import resource_path
 
 
 class ToastManager:
     def __init__(self):
         self.items = []  # list of (message, expire_time)
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         try:
             self.font = pygame.font.Font(caminho_fonte, 18)
         except Exception:

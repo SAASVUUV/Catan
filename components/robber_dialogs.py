@@ -6,6 +6,7 @@ from constants.colors import BEIGE_MEDIUM, BROWN_DARK, GOLD
 from constants.types import ROCK, TREE, LAMB, BRICK, WHEAT
 from constants.types_colors import RESOURCE_COLORS
 from models.inventory import TRADEABLE_RESOURCES
+from utils.resources import resource_path
 
 
 RESOURCE_NAMES = {
@@ -25,7 +26,7 @@ class DiscardResourcesDialog(Modal):
         self.on_confirm = on_confirm
         self.selection = {r: 0 for r in TRADEABLE_RESOURCES}
 
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         self.font = pygame.font.Font(caminho_fonte, 16)
         self.small_font = pygame.font.Font(caminho_fonte, 13)
 
@@ -115,7 +116,7 @@ class RobberStealDialog(Modal):
         self.on_select = on_select
         self.on_skip = on_skip
 
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         self.font = pygame.font.Font(caminho_fonte, 17)
         self.buttons = []
 

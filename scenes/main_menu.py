@@ -8,6 +8,7 @@ from constants import colors as C
 from components.selection_icons import PlayerSlot
 import scenes.configurations as configurations
 import scenes.game as game
+from utils.resources import resource_path
   
 class MainMenu(BaseScene):
     def __init__(self, manager=None):
@@ -21,7 +22,7 @@ class MainMenu(BaseScene):
         self._init_slots()
 
     def _load_fonts(self):
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         title_size = int(self.screen_height * 0.2)
         label_size = int(self.screen_height * 0.040)
         try:
@@ -55,7 +56,7 @@ class MainMenu(BaseScene):
         top_margin = int(self.screen_height * 0.08)
         self.board_rect = pygame.Rect(self.screen_width - board_size - margin, top_margin, board_size, board_size)
         try:
-            imagem_original = pygame.image.load("./assets/images/boardImage.png").convert_alpha()
+            imagem_original = pygame.image.load(resource_path('assets', 'images', 'boardImage.png')).convert_alpha()
             self.board_image = pygame.transform.smoothscale(imagem_original, (board_size, board_size))
         except FileNotFoundError:
             print("Aviso: Imagem do tabuleiro não encontrada. Criando placeholder vermelho.")

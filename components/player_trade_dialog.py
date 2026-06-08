@@ -1,6 +1,7 @@
 import pygame
 from components.modal import Modal
 from components.button import Button
+from utils.resources import resource_path
 from core.trade import TradeOffer
 from models.inventory import TRADEABLE_RESOURCES
 from constants.colors import BROWN_DARK, GOLD
@@ -21,7 +22,7 @@ class PlayerTradeDialog(Modal):
         self._setup_ui()
 
     def _setup_ui(self):
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         self.font = pygame.font.Font(caminho_fonte, 14)
 
         self.offer_rects = []
@@ -167,7 +168,7 @@ class TradeOfferDialog(Modal):
         self._setup_ui()
 
     def _setup_ui(self):
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         self.font = pygame.font.Font(caminho_fonte, 16)
 
         self.btn_accept = Button(

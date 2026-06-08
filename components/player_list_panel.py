@@ -1,5 +1,6 @@
 import pygame
 from constants.colors import BEIGE_LIGHT, BROWN_DARK, BLACK, WHITE
+from utils.resources import resource_path
 
 
 class PlayerListPanel:
@@ -16,7 +17,7 @@ class PlayerListPanel:
 
         font_size = int(24 * scale)
         font_bold_size = int(26 * scale)
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         self.font = pygame.font.Font(caminho_fonte, font_size)
         self.font_bold = pygame.font.Font(caminho_fonte, font_bold_size)
 

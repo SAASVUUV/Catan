@@ -3,6 +3,7 @@ from components.modal import Modal
 from components.button import Button
 from constants.colors import YELLOW, GREEN_FOREST, BROWN_DARK
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from utils.resources import resource_path
 
 
 class RoadBuildingDialog(Modal):
@@ -125,7 +126,7 @@ class RoadBuildingDialog(Modal):
 
         # draw status inside modal with larger font and centered
         scale = SCREEN_HEIGHT / 600.0
-        caminho_fonte = "./assets/fonts/MedievalSharp-Regular.ttf"
+        caminho_fonte = resource_path('assets', 'fonts', 'MedievalSharp-Regular.ttf')
         font = pygame.font.Font(caminho_fonte,  max(16, int(20 * scale)))
         status = f"Estradas selecionadas: {len(self.selected)}/2"
         status_surf = font.render(status, True, BROWN_DARK)
